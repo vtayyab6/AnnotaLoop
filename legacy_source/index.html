@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnnotaLoop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        'primary-hover': '#059669',
+                        gray: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: '#e5e7eb',
+                            300: '#d1d5db',
+                            700: '#374151',
+                            800: '#1f2937',
+                            900: '#111827',
+                            950: '#030712'
+                        }
+                    },
+                    fontSize: {
+                        'xs': '0.75rem',
+                        'sm': '0.8125rem',
+                        'base': '0.875rem',
+                        'lg': '1rem',
+                        'xl': '1.125rem',
+                        '2xl': '1.5rem',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Custom Scrollbar */
+        .scroll-custom::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .scroll-custom::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scroll-custom::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+
+        .dark .scroll-custom::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
+
+        .scroll-custom::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Modal Transitions */
+        .modal-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        /* Inputs */
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 1px #10b981;
+        }
+
+        /* Sidebar Transition */
+        aside {
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Collapsed Sidebar State */
+        aside.sidebar-collapsed {
+            width: 80px;
+        }
+
+        /* Reduced width */
+        aside.sidebar-collapsed .logo-text,
+        aside.sidebar-collapsed .btn-text,
+        aside.sidebar-collapsed .nav-text,
+        aside.sidebar-collapsed .section-title {
+            display: none;
+            opacity: 0;
+        }
+
+        aside.sidebar-collapsed .sidebar-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        aside.sidebar-collapsed .sidebar-icon {
+            margin-right: 0;
+        }
+
+        aside.sidebar-collapsed #toggle-sidebar-btn {
+            transform: rotate(180deg);
+        }
+
+        /* Tooltip Logic */
+        .sidebar-tooltip {
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 10px;
+            background-color: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 50;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        aside.sidebar-collapsed .group:hover .sidebar-tooltip {
+            opacity: 1;
+        }
+
+        .dark .sidebar-tooltip {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        /* Lock Screen Pin Input */
+        .pin-input {
+            caret-color: transparent;
+        }
+
+        .pin-input:focus {
+            outline: none;
+        }
+
+        /* Cursor blink animation */
+        @keyframes blink {
+
+            0%,
+            49% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .cursor-blink::after {
+            content: '|';
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        /* Drag Drop Zone Pattern */
+        .drag-drop-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%239CA3AF' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+
+        .dark .drag-drop-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%234B5563' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+
+        /* Custom Dropdown */
+        .custom-select-trigger {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-options {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+        }
+
+        .custom-select.open .custom-options {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gray-100 dark:bg-gray-900 h-screen flex text-gray-800 dark:text-gray-200 text-sm transition-colors duration-200"
+    onkeydown="handleGlobalKeydown(event)">
+
+    <!-- LOCK SCREEN OVERLAY - Updated Design -->
+    <div id="lock-screen"
+        class="fixed inset-0 z-[100] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center text-gray-800 dark:text-white hidden transition-colors duration-300">
+
+        <!-- App Logo/Branding -->
+        <div class="mb-10 flex flex-col items-center">
+            <div
+                class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight mb-1">App Locked</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Enter your 4-digit PIN to unlock</p>
+        </div>
+
+        <!-- PIN Input Boxes -->
+        <div id="pin-display" class="flex gap-3 mb-8">
+            <input type="password" maxlength="1" readonly
+                class="pin-input w-14 h-14 text-center text-2xl font-medium bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+            <input type="password" maxlength="1" readonly
+                class="pin-input w-14 h-14 text-center text-2xl font-medium bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+            <input type="password" maxlength="1" readonly
+                class="pin-input w-14 h-14 text-center text-2xl font-medium bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+            <input type="password" maxlength="1" readonly
+                class="pin-input w-14 h-14 text-center text-2xl font-medium bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+        </div>
+
+        <!-- Numpad (No Labels) -->
+        <div class="grid grid-cols-3 gap-3 w-64 mb-4">
+            <button onclick="enterPin(1)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">1</button>
+            <button onclick="enterPin(2)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">2</button>
+            <button onclick="enterPin(3)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">3</button>
+            <button onclick="enterPin(4)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">4</button>
+            <button onclick="enterPin(5)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">5</button>
+            <button onclick="enterPin(6)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">6</button>
+            <button onclick="enterPin(7)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">7</button>
+            <button onclick="enterPin(8)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">8</button>
+            <button onclick="enterPin(9)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">9</button>
+            <button onclick="clearPin()"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-red-500 hover:text-red-500 text-sm font-medium rounded-lg transition-all shadow-sm">Clear</button>
+            <button onclick="enterPin(0)"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary text-xl font-medium rounded-lg transition-all shadow-sm">0</button>
+            <button onclick="clearPin()"
+                class="h-14 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-500 rounded-lg transition-all shadow-sm flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <button onclick="openForgotPinModal()" class="text-sm text-primary hover:underline mb-2">Forgot PIN?</button>
+        <p class="text-xs text-gray-400">AnnotaLoop v2.4.0</p>
+    </div>
+
+    <!-- LEFT SIDEBAR -->
+    <aside id="sidebar"
+        class="w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 relative z-40 shadow-sm transition-all duration-300">
+        <button id="toggle-sidebar-btn" onclick="toggleSidebar()"
+            class="absolute -right-3 top-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full p-1 shadow-md text-gray-500 dark:text-gray-300 hover:text-primary z-50 transition-transform duration-300">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6" />
+            </svg>
+        </button>
+
+        <div class="p-4 border-b border-transparent">
+            <div
+                class="flex items-center gap-2 font-bold text-gray-900 dark:text-white text-lg mb-6 overflow-hidden whitespace-nowrap group">
+                <div
+                    class="w-8 h-8 min-w-[2rem] bg-primary rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <span class="logo-text tracking-tight ml-2">AnnotaLoop</span>
+            </div>
+
+            <!-- Dashboard Button -->
+            <button onclick="goBackToDashboard()"
+                class="sidebar-item w-full flex items-center px-2 py-2 mb-1 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative">
+                <svg class="sidebar-icon w-5 h-5 min-w-[1.25rem] mr-2 text-gray-500 dark:text-gray-400" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                    </path>
+                </svg>
+                <span class="nav-text font-medium">Dashboard</span>
+                <span class="sidebar-tooltip">Dashboard</span>
+            </button>
+
+            <!-- New Project Button -->
+            <button id="sidebar-new-project-btn" onclick="openProjectModal()"
+                class="sidebar-item w-full bg-primary hover:bg-primary-hover text-white py-2 px-3 rounded-md font-medium transition-colors flex items-center gap-2 shadow-sm text-sm overflow-hidden whitespace-nowrap group relative">
+                <svg class="sidebar-icon w-5 h-5 min-w-[1.25rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="btn-text">New Project</span>
+                <span class="sidebar-tooltip">New Project</span>
+            </button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto px-2 scroll-custom">
+            <div
+                class="section-title px-2 mt-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                Recent</div>
+            <ul class="space-y-0.5" id="recent-projects-list">
+                <!-- Injected via JS -->
+            </ul>
+        </div>
+
+        <!-- REORDERED SIDEBAR ITEMS -->
+        <div class="p-2 border-t border-gray-200 dark:border-gray-700 space-y-0.5">
+
+            <!-- 1. Settings -->
+            <button onclick="openSettingsModal()"
+                class="sidebar-item w-full flex items-center px-2 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative">
+                <svg class="sidebar-icon w-5 h-5 min-w-[1.25rem] mr-2 text-gray-500 dark:text-gray-400"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span class="nav-text">Settings</span>
+                <span class="sidebar-tooltip">Settings</span>
+            </button>
+
+            <!-- 2. Switch Theme -->
+            <button onclick="toggleTheme()"
+                class="sidebar-item w-full flex items-center px-2 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative">
+                <svg id="theme-icon" class="sidebar-icon w-5 h-5 min-w-[1.25rem] mr-2 text-gray-500 dark:text-gray-400"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <path
+                        d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+                <span class="nav-text" id="theme-text">Switch to Dark Mode</span>
+                <span class="sidebar-tooltip">Switch Theme</span>
+            </button>
+
+            <!-- 3. Lock App -->
+            <div onclick="lockApp()"
+                class="sidebar-item flex items-center px-2 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative">
+                <svg class="sidebar-icon w-5 h-5 min-w-[1.25rem] mr-2 text-gray-500 dark:text-gray-400" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                    </path>
+                </svg>
+                <span class="nav-text">Lock App</span>
+                <span class="sidebar-tooltip">Lock App</span>
+            </div>
+
+            <!-- 4. Help & Support -->
+            <button onclick="openHelpModal()"
+                class="sidebar-item w-full flex items-center px-2 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative">
+                <svg class="sidebar-icon w-5 h-5 min-w-[1.25rem] mr-2 text-gray-500 dark:text-gray-400" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                <span class="nav-text">Help & Support</span>
+                <span class="sidebar-tooltip">Help & Support</span>
+            </button>
+
+            <!-- 5. About App -->
+            <button onclick="openAboutModal()"
+                class="sidebar-item w-full flex items-center px-2 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative">
+                <svg class="sidebar-icon w-5 h-5 min-w-[1.25rem] mr-2 text-gray-500 dark:text-gray-400" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="nav-text">About App</span>
+                <span class="sidebar-tooltip">About App</span>
+            </button>
+
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow flex flex-col h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200 relative">
+
+        <!-- Top Bar -->
+        <header
+            class="h-14 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between px-6 flex-shrink-0 transition-colors duration-200">
+            <!-- Breadcrumbs -->
+            <div id="header-left" class="flex items-center gap-2">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Create Project Button (Only on Dashboard) -->
+                <button id="header-new-project-btn" onclick="openProjectModal()"
+                    class="hidden md:flex items-center gap-2 text-xs font-semibold text-primary border border-primary/20 bg-primary/5 px-3 py-1.5 rounded hover:bg-primary/10 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Project
+                </button>
+
+                <!-- Import Project Button (Only on Dashboard) -->
+                <button id="header-import-btn" onclick="openImportModal()"
+                    class="hidden md:flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                    </svg>
+                    Import Project
+                </button>
+
+                <div
+                    class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <button id="view-grid-btn" onclick="toggleView('grid')"
+                        class="p-1.5 rounded-md bg-white dark:bg-gray-600 shadow-sm text-primary dark:text-primary transition-all">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </button>
+                    <button id="view-table-btn" onclick="toggleView('table')"
+                        class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Body -->
+        <div id="main-content-scroll" class="flex-grow overflow-y-auto p-6 scroll-custom relative">
+
+            <!-- DASHBOARD VIEW -->
+            <div id="dashboard-view">
+                <!-- Grid Container -->
+                <div id="projects-container"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Create New Card -->
+                    <div onclick="openProjectModal()"
+                        class="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-green-50 dark:hover:bg-green-900/10 transition-all min-h-[160px] group">
+                        <div
+                            class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-primary group-hover:text-white text-gray-400 flex items-center justify-center transition-colors mb-2">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </div>
+                        <span class="font-semibold text-gray-500 dark:text-gray-400 group-hover:text-primary">Create New
+                            Project</span>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div id="projects-table-container"
+                    class="hidden bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead
+                            class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold border-b border-gray-200 dark:border-gray-600">
+                            <tr>
+                                <th class="px-4 py-3">Project Name</th>
+                                <th class="px-4 py-3">Created</th>
+                                <th class="px-4 py-3">Documents</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table-body" class="divide-y divide-gray-100 dark:divide-gray-700">
+                            <!-- JS populates -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PROJECT DETAIL VIEW (Hidden initially) -->
+            <div id="project-detail-view" class="hidden h-full flex flex-col">
+                <!-- Header/Info -->
+                <div class="mb-6 flex justify-between items-start">
+                    <div class="w-full">
+                        <div class="flex items-center gap-2 group mb-1">
+                            <h2 id="detail-project-name"
+                                class="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer hover:underline decoration-dashed decoration-gray-400 underline-offset-4"
+                                onclick="openEditProjectModal(state.currentProject.id)">Project Name</h2>
+                            <button onclick="openEditProjectModal(state.currentProject.id)"
+                                class="text-gray-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><svg
+                                    class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                    </path>
+                                </svg></button>
+                        </div>
+                        <div class="flex items-start gap-2 group w-full max-w-2xl">
+                            <p id="detail-project-desc" class="text-gray-500 dark:text-gray-400 text-sm">Project
+                                description goes here...
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <!-- Project Configuration Button (shown when inside project) -->
+                        <button onclick="openConfigModal(state.currentProject.id)" title="Project Configuration"
+                            class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-md font-medium shadow-sm flex items-center gap-2 transition-colors">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>
+                            <span>Configure</span>
+                        </button>
+                        <button onclick="openUploadModal()" title="Upload Documents"
+                            class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-md font-medium shadow-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Upload Docs
+                        </button>
+                        <input type="file" id="file-upload" class="hidden" multiple accept=".pdf,.txt,.doc,.docx,.md"
+                            onchange="handleFileUpload(this)">
+                    </div>
+                </div>
+
+                <!-- Document Search -->
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="relative flex-grow max-w-md">
+                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="document-search" placeholder="Search documents..."
+                            oninput="filterDocuments()"
+                            class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 focus:border-primary transition-colors placeholder-gray-400 text-gray-700 dark:text-gray-200">
+                    </div>
+                </div>
+
+                <!-- Document Status Filter -->
+                <div class="mb-4 flex items-center gap-3">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</label>
+                    <div id="document-filter-dropdown" class="w-48"></div>
+                </div>
+
+                <!-- Batch Actions Bar -->
+                <div id="batch-actions-bar"
+                    class="hidden items-center justify-between bg-white dark:bg-gray-800 border border-primary/30 rounded-lg p-2 mb-4 shadow-sm animate-fade-in">
+                    <div class="flex items-center gap-3 px-2">
+                        <span class="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full"
+                            id="selected-count">0</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Documents Selected</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="selectAllDocuments()" title="Select All Documents"
+                            class="text-xs bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded font-medium transition-colors">Select
+                            All</button>
+                        <button onclick="clearSelection()" title="Clear Selection"
+                            class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded font-medium transition-colors">Clear</button>
+                        <div class="border-l border-gray-300 dark:border-gray-600 mx-1"></div>
+                        <button onclick="batchAction('annotate')" title="Batch Annotate Selected Documents"
+                            class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded font-medium transition-colors">Batch
+                            Annotate</button>
+                        <button onclick="openExportModal(true)" title="Export Selected Documents"
+                            class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded font-medium transition-colors">Batch
+                            Export</button>
+                        <button onclick="batchAction('delete')" title="Delete Selected Documents"
+                            class="text-xs bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 px-3 py-1.5 rounded font-medium transition-colors">Delete
+                            Selected</button>
+                    </div>
+                </div>
+
+                <!-- Documents List -->
+                <div class="flex-grow">
+                    <div id="documents-grid"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <!-- JS Injected Docs -->
+                    </div>
+
+                    <div id="documents-table"
+                        class="hidden bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold border-b border-gray-200 dark:border-gray-600">
+                                <tr>
+                                    <th class="w-8 px-4 py-3"><input type="checkbox" onchange="toggleSelectAll(this)"
+                                            class="rounded text-primary focus:ring-primary"></th>
+                                    <th class="px-4 py-3">Name</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Size</th>
+                                    <th class="px-4 py-3">Tokens</th>
+                                    <th class="px-4 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documents-table-body" class="divide-y divide-gray-100 dark:divide-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[900px] h-[650px] rounded-xl shadow-2xl flex overflow-hidden border border-gray-200 dark:border-gray-700">
+            <!-- Settings Sidebar -->
+            <div class="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 p-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Settings</h3>
+                <ul class="space-y-1">
+                    <li onclick="switchSettingsTab('llm')" id="set-tab-llm"
+                        class="px-3 py-2 rounded bg-white dark:bg-gray-800 shadow-sm text-primary font-medium text-sm cursor-pointer border border-gray-200 dark:border-gray-700 transition-all">
+                        LLM Integration</li>
+                    <li onclick="switchSettingsTab('security')" id="set-tab-security"
+                        class="px-3 py-2 rounded text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm transition-all">
+                        Security & Lock</li>
+                    <li onclick="switchSettingsTab('general')" id="set-tab-general"
+                        class="px-3 py-2 rounded text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm transition-all">
+                        General</li>
+                </ul>
+            </div>
+
+            <!-- Settings Content -->
+            <div
+                class="flex-grow p-8 overflow-y-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 relative">
+                <button onclick="closeModal('settings-modal')"
+                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><svg class="w-6 h-6"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+
+                <!-- LLM TAB -->
+                <div id="set-content-llm" class="block">
+                    <h2 class="text-xl font-bold mb-6">LLM Integration</h2>
+
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">Select Default Model
+                            Provider</label>
+                        <div id="default-provider-dropdown" class="w-full"></div>
+                    </div>
+
+                    <div class="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+                        <button onclick="switchLLMSubTab('mistral')" id="llm-sub-mistral"
+                            class="pb-2 border-b-2 border-primary text-primary font-medium whitespace-nowrap">Mistral</button>
+                        <button onclick="switchLLMSubTab('gemini')" id="llm-sub-gemini"
+                            class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">Gemini</button>
+                        <button onclick="switchLLMSubTab('openai')" id="llm-sub-openai"
+                            class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">OpenAI</button>
+                        <button onclick="switchLLMSubTab('anthropic')" id="llm-sub-anthropic"
+                            class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">Anthropic</button>
+                        <button onclick="switchLLMSubTab('local')" id="llm-sub-local"
+                            class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap">Local
+                            LLM</button>
+                    </div>
+
+                    <div id="llm-config-area" class="space-y-6">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <!-- SECURITY TAB -->
+                <div id="set-content-security" class="hidden">
+                    <h2 class="text-xl font-bold mb-6">Security & App Lock</h2>
+
+                    <div
+                        class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6 flex items-start gap-3">
+                        <svg class="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
+                        </svg>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-400">Enabling App Lock will require a 4-digit
+                            PIN every time you open or return to AnnotaLoop.</p>
+                    </div>
+
+                    <div
+                        class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg mb-6">
+                        <div>
+                            <div class="font-medium">Enable App Lock</div>
+                            <div class="text-xs text-gray-500">Secure application with PIN</div>
+                        </div>
+                        <button onclick="toggleAppLock()" id="btn-toggle-lock"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-700 transition-colors">
+                            <span class="sr-only">Enable App Lock</span>
+                            <span id="toggle-lock-dot"
+                                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                        </button>
+                    </div>
+
+                    <div id="security-setup-area" class="hidden border-t border-gray-200 dark:border-gray-700 pt-6">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="font-bold text-sm mb-3">Set New PIN</h3>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="password" id="setup-pin" maxlength="4"
+                                        class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-center tracking-widest text-lg font-mono"
+                                        placeholder="----">
+                                </div>
+                                <button onclick="saveNewPin()"
+                                    class="w-full bg-primary hover:bg-primary-hover text-white py-2 rounded text-sm font-medium">Set
+                                    PIN</button>
+                            </div>
+                            <div
+                                class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <h3 class="font-bold text-sm mb-2 text-red-500">Recovery Secret Key</h3>
+                                <p class="text-xs text-gray-500 mb-3">Save this key! You need it if you forget your PIN.
+                                </p>
+                                <div class="font-mono bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-center select-all cursor-pointer text-lg mb-3"
+                                    onclick="copySecret()">A7X9-B2M4-L8Q1</div>
+                                <button onclick="copySecret()"
+                                    class="text-xs text-primary hover:underline w-full text-center">Click to
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GENERAL TAB -->
+                <div id="set-content-general" class="hidden">
+                    <h2 class="text-xl font-bold mb-6">General</h2>
+                    <p class="text-gray-500">Application preferences and data management.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div id="export-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[400px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-bold mb-4 dark:text-white">Export Documents</h2>
+            <p class="text-sm text-gray-500 mb-4">Select format for export:</p>
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <button onclick="confirmExport('pdf')"
+                    class="p-3 border border-gray-200 dark:border-gray-600 rounded hover:border-primary hover:bg-green-50 dark:hover:bg-green-900/20 text-center transition-colors group">
+                    <span class="block font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary">PDF</span>
+                </button>
+                <button onclick="confirmExport('json')"
+                    class="p-3 border border-gray-200 dark:border-gray-600 rounded hover:border-primary hover:bg-green-50 dark:hover:bg-green-900/20 text-center transition-colors group">
+                    <span class="block font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary">JSON</span>
+                </button>
+                <button onclick="confirmExport('csv')"
+                    class="p-3 border border-gray-200 dark:border-gray-600 rounded hover:border-primary hover:bg-green-50 dark:hover:bg-green-900/20 text-center transition-colors group">
+                    <span class="block font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary">CSV</span>
+                </button>
+            </div>
+            <button onclick="closeModal('export-modal')"
+                class="w-full text-gray-500 hover:text-gray-700 text-sm">Cancel</button>
+        </div>
+    </div>
+
+    <!-- ABOUT MODAL -->
+    <div id="about-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[500px] rounded-xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700 text-center">
+            <div
+                class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/20">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 dark:text-white">AnnotaLoop</h2>
+            <p class="text-primary font-medium mb-6">v2.4.0 (Stable)</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                AI-assisted document annotation with human-in-the-loop workflows.
+            </p>
+            <div class="flex justify-center gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-8">
+                <span>• Provider-Agnostic</span>
+                <span>• Open Source</span>
+                <span>• HITL Ready</span>
+            </div>
+            <button onclick="closeModal('about-modal')"
+                class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 px-6 py-2 rounded-full text-sm font-medium transition-colors">Close</button>
+        </div>
+    </div>
+
+    <!-- HELP & SUPPORT MODAL - Updated Design -->
+    <div id="help-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[800px] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold dark:text-white">Help & Support</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Resources to help you get started</p>
+                </div>
+                <button onclick="closeModal('help-modal')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="p-6 grid grid-cols-2 gap-6">
+                <!-- Left Column: Useful Resources -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Useful Resources</h3>
+                    <div class="space-y-3">
+                        <a href="#"
+                            class="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-sm transition-all group">
+                            <div
+                                class="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors mb-1">
+                                Documentation</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Complete guide to using AnnotaLoop
+                            </div>
+                        </a>
+                        <a href="#"
+                            class="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-sm transition-all group">
+                            <div
+                                class="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors mb-1">
+                                API Reference</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Integration with external systems
+                            </div>
+                        </a>
+                        <a href="#"
+                            class="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-sm transition-all group">
+                            <div
+                                class="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors mb-1">
+                                Community Forum</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Get help from other users</div>
+                        </a>
+                        <a href="#"
+                            class="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-sm transition-all group">
+                            <div
+                                class="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors mb-1">
+                                GitHub Repository</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Contribute to the open source project
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column: Video Tutorial -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Video Tutorial</h3>
+                    <div onclick="openVideoModal()"
+                        class="bg-gray-900 dark:bg-gray-950 rounded-lg aspect-video flex items-center justify-center mb-4 relative group cursor-pointer overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-50"></div>
+                        <div class="relative z-10 flex flex-col items-center">
+                            <div
+                                class="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg mb-2 group-hover:scale-110 transition-transform">
+                                <svg class="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            </div>
+                            <p class="text-white text-xs font-medium">Video tutorial placeholder</p>
+                            <p class="text-gray-400 text-xs mt-1">Replace with actual video embed</p>
+                        </div>
+                    </div>
+
+                    <!-- Need Help Section -->
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Need Help?</h4>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Contact our support team at</p>
+                        <a href="mailto:support@annotaloop.com"
+                            class="text-sm font-medium text-primary hover:underline">support@annotaloop.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJECT MODAL -->
+    <div id="project-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[500px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold mb-1 dark:text-white" id="project-modal-header">Create New Project</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Set up your extraction workspace.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Project
+                        Name</label>
+                    <input id="new-project-name" type="text"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm dark:text-white"
+                        placeholder="e.g. Q4 Invoices">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Short
+                        Description</label>
+                    <textarea id="new-project-desc"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm dark:text-white h-24 resize-none"
+                        placeholder="What is this project for?"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button onclick="closeModal('project-modal')"
+                        class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm">Cancel</button>
+                    <button onclick="handleSaveProject()"
+                        class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded text-sm font-medium">Create
+                        Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE/CONFIRM MODAL -->
+    <div id="delete-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[400px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700 text-center">
+            <div
+                class="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2" id="delete-title">Delete Project?</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="delete-msg">Are you sure? This action cannot be
+                undone.</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeModal('delete-modal')"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button onclick="confirmDelete()"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT PROJECT MODAL -->
+    <div id="import-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[550px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold dark:text-white">Import Project</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a project export file to restore</p>
+                </div>
+                <button onclick="closeModal('import-modal')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div id="import-drop-zone"
+                class="drag-drop-zone p-10 rounded-lg flex flex-col items-center justify-center text-center mb-4 transition-all hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-2"
+                onclick="document.getElementById('import-file-input').click()">
+                <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                </svg>
+                <p class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">Drag & Drop your project file
+                    here</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">or click to browse</p>
+                <p class="text-xs text-gray-400">Supported: .json, .zip (Max 50MB)</p>
+            </div>
+            <input type="file" id="import-file-input" class="hidden" accept=".json,.zip"
+                onchange="handleImportFile(this)">
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('import-modal')"
+                    class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm">Cancel</button>
+                <button onclick="processImport()" id="import-confirm-btn" disabled
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Import
+                    Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJECT CREATE MODAL -->
+    <div id="project-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[500px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold dark:text-white">Create New Project</h2>
+                <button onclick="closeModal('project-modal')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Project Name</label>
+                    <input type="text" id="new-project-name"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm"
+                        placeholder="Enter project name...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Description</label>
+                    <textarea id="new-project-desc"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm h-24 resize-none"
+                        placeholder="Enter project description..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal('project-modal')"
+                    class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm">Cancel</button>
+                <button onclick="createProject()"
+                    class="px-6 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium">Create
+                    Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT PROJECT MODAL -->
+    <div id="edit-project-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[500px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold dark:text-white">Edit Project</h2>
+                <button onclick="closeModal('edit-project-modal')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Project Name</label>
+                    <input type="text" id="edit-project-name"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm"
+                        placeholder="Enter project name...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Description</label>
+                    <textarea id="edit-project-desc"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm h-24 resize-none"
+                        placeholder="Enter project description..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal('edit-project-modal')"
+                    class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm">Cancel</button>
+                <button onclick="saveProjectEdit()"
+                    class="px-6 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium">Save
+                    Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD DOCUMENTS MODAL -->
+    <div id="upload-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[550px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold dark:text-white">Upload Documents</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Add documents to your project</p>
+                </div>
+                <button onclick="closeModal('upload-modal')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div id="upload-drop-zone"
+                class="drag-drop-zone p-10 rounded-lg flex flex-col items-center justify-center text-center mb-4 transition-all hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-2"
+                onclick="document.getElementById('modal-file-upload').click()">
+                <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                </svg>
+                <p class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">Drag & Drop your files here</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">or click to browse</p>
+                <p class="text-xs text-gray-400">Supported: PDF, TXT, DOC, DOCX, MD (Max 10MB)</p>
+            </div>
+            <input type="file" id="modal-file-upload" class="hidden" multiple accept=".pdf,.txt,.doc,.docx,.md"
+                onchange="handleModalFileUpload(this)">
+            <div id="upload-file-list" class="hidden mb-4 max-h-32 overflow-y-auto space-y-2"></div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('upload-modal')"
+                    class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm">Cancel</button>
+                <button onclick="processUpload()" id="upload-confirm-btn" disabled
+                    class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Upload
+                    Files</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIDEO PLAYER MODAL -->
+    <div id="video-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-80 backdrop-blur-sm">
+        <div class="modal-content bg-gray-900 w-[900px] rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                <h2 class="text-lg font-bold text-white">Getting Started with AnnotaLoop</h2>
+                <button onclick="closeVideoModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="aspect-video">
+                <iframe id="video-iframe" width="100%" height="100%" src="" title="Tutorial Video" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORGOT PIN MODAL -->
+    <div id="forgot-pin-modal"
+        class="modal-overlay fixed inset-0 z-[101] flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[400px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700 text-center">
+            <div
+                class="mx-auto w-16 h-16 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Forgot Your PIN?</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">To reset your PIN, you'll need to clear all app
+                data. This will remove all projects and settings.</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeModal('forgot-pin-modal')"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button onclick="resetAllData()"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">Reset All
+                    Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRM DIALOG -->
+    <div id="confirm-modal"
+        class="modal-overlay fixed inset-0 z-[60] flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[400px] rounded-xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700 text-center">
+            <div id="confirm-icon"
+                class="mx-auto w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+            </div>
+            <h3 id="confirm-title" class="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirm Action</h3>
+            <p id="confirm-message" class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to
+                proceed?</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="confirmCancel()"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button id="confirm-action-btn" onclick="confirmOk()"
+                    class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="notification-toast"
+        class="fixed top-4 right-4 z-[200] transform translate-x-full transition-transform duration-300">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4 flex items-start gap-3 min-w-[320px] max-w-[400px]">
+            <div id="toast-icon"
+                class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div class="flex-grow">
+                <h4 id="toast-title" class="font-semibold text-gray-900 dark:text-white text-sm">Success</h4>
+                <p id="toast-message" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Operation completed
+                    successfully.</p>
+            </div>
+            <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- RESTORED FULL CONFIGURATION MODAL -->
+    <div id="config-modal"
+        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+        <div
+            class="modal-content bg-white dark:bg-gray-800 w-[800px] h-[600px] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
+            <!-- Header -->
+            <div
+                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800 flex-shrink-0">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-white" id="config-modal-title">Project
+                        Configuration</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Manage labels and extraction rules.</p>
+                </div>
+                <button onclick="closeModal('config-modal')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1"><svg
+                        class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+            <!-- Tabs -->
+            <div
+                class="px-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex gap-6 flex-shrink-0">
+                <button onclick="switchConfigTab('labels')" id="tab-btn-labels"
+                    class="py-3 text-sm font-medium text-primary border-b-2 border-primary transition-all">Labels</button>
+                <button onclick="switchConfigTab('rules')" id="tab-btn-rules"
+                    class="py-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent transition-all">Rules</button>
+            </div>
+            <!-- Body -->
+            <div
+                class="flex-grow overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 scroll-custom text-gray-800 dark:text-gray-200">
+                <!-- LABELS TAB -->
+                <div id="tab-content-labels" class="block h-full">
+                    <div class="flex gap-6 h-full">
+                        <div class="w-1/2 flex flex-col">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Active Labels</h4>
+                            <div id="labels-list"
+                                class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex-grow overflow-y-auto scroll-custom p-2 space-y-2">
+                            </div>
+                        </div>
+                        <div
+                            class="w-1/2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm h-fit">
+                            <h4 class="text-sm font-bold mb-4">Add/Edit Label</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Name</label>
+                                    <input id="input-label-name" type="text"
+                                        class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm"
+                                        placeholder="Label Name">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+                                    <input id="input-label-desc" type="text"
+                                        class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm"
+                                        placeholder="Description">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Color</label>
+                                    <div class="flex gap-2 flex-wrap">
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-blue-500')" title="Blue"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-green-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-green-500')" title="Green"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-red-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-red-500')" title="Red"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-purple-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-purple-500')" title="Purple"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-yellow-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-yellow-500')" title="Yellow"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-pink-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-pink-500')" title="Pink"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-indigo-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-indigo-500')" title="Indigo"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-orange-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-orange-500')" title="Orange"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-teal-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-teal-500')" title="Teal"></button>
+                                        <button
+                                            class="w-8 h-8 rounded-full bg-cyan-500 ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600 transition-all"
+                                            onclick="selectColor(this, 'bg-cyan-500')" title="Cyan"></button>
+                                    </div>
+                                    <input type="hidden" id="input-label-color" value="bg-blue-500">
+                                </div>
+                                <button onclick="saveLabel()"
+                                    class="w-full bg-gray-800 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white py-2 rounded font-medium text-sm mt-2">Save
+                                    Label</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- RULES TAB - Redesigned to match labels layout -->
+                <div id="tab-content-rules" class="hidden h-full">
+                    <div class="flex gap-6 h-full">
+                        <!-- Left: Existing Rules -->
+                        <div class="w-1/2 flex flex-col">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Existing Rules
+                            </h4>
+                            <div id="rules-list"
+                                class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex-grow overflow-y-auto scroll-custom p-2 space-y-2">
+                            </div>
+                        </div>
+
+                        <!-- Right: Add/Edit Rule -->
+                        <div
+                            class="w-1/2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm h-fit">
+                            <h4 class="text-sm font-bold mb-4">Add/Edit Extraction Rule</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Rule Name</label>
+                                    <input id="input-rule-name" type="text"
+                                        class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm"
+                                        placeholder="e.g., Extract Invoice Number">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Description /
+                                        Logic</label>
+                                    <textarea id="input-rule-logic"
+                                        class="w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm h-32 resize-none"
+                                        placeholder="Describe the extraction logic in natural language..."></textarea>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Insert
+                                        Label</label>
+                                    <div id="rule-chips" class="flex flex-wrap gap-2 min-h-[32px]"></div>
+                                </div>
+                                <button onclick="saveRule()" id="save-rule-btn"
+                                    class="w-full bg-gray-800 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white py-2 rounded font-medium text-sm mt-2">Save
+                                    Rule</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        /* --- STATE --- */
+        const state = {
+            projects: [
+                { id: 1, name: "Q1 Financials", desc: "Auditing reports for Q1 including balance sheets.", date: "Oct 24, 2025", docCount: 12, labels: [{ name: "Invoice #", color: "bg-blue-500" }, { name: "Total", color: "bg-green-500" }], rules: [{ name: "Extract Total", logic: "Find highest currency value near bottom" }] },
+                { id: 2, name: "Legal Contracts", desc: "Vendor liability agreements and NDAs.", date: "Nov 02, 2025", docCount: 48, labels: [], rules: [] },
+                { id: 3, name: "Invoice Automation", desc: "Processing utility bills.", date: "Dec 15, 2025", docCount: 8, labels: [], rules: [] }
+            ],
+            documents: [
+                { id: 101, name: "invoice_A204.pdf", status: "Ready", size: "2.4 MB", tokens: "~1.2k", projectId: 1 },
+                { id: 102, name: "invoice_B99.pdf", status: "Annotated", size: "1.1 MB", tokens: "~800", projectId: 1 },
+                { id: 103, name: "balance_sheet.pdf", status: "Review", size: "4.5 MB", tokens: "~3.5k", projectId: 1 },
+            ],
+            currentProject: null,
+            selectedDocs: new Set(),
+            view: 'grid',
+            deleteType: null, // 'project' | 'document' | 'batch'
+            deleteTarget: null,
+            security: {
+                enabled: false,
+                pin: '1234', // Mock default
+                secret: 'A7X9-B2M4-L8Q1',
+                locked: false
+            },
+            settings: {
+                defaultProvider: 'OpenAI'
+            },
+            editingLabelIndex: null,  // Track if editing label
+            editingRuleIndex: null,   // Track if editing rule
+            documentFilter: 'All'     // Document status filter
+        };
+
+        /* --- INITIALIZATION --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLockState();
+            renderProjects();
+            renderRecentSidebar();
+            initCustomDropdowns();
+            updateThemeText();
+            switchLLMSubTab('mistral'); // Init Default tab
+
+            // Add save label button ID for editing
+            setTimeout(() => {
+                const saveLabelBtn = document.querySelector('#tab-content-labels button[onclick="saveLabel()"]');
+                if (saveLabelBtn) saveLabelBtn.id = 'save-label-btn';
+            }, 100);
+        });
+
+        /* --- SECURITY LOGIC --- */
+        function checkLockState() {
+            if (state.security.enabled && !sessionStorage.getItem('unlocked')) {
+                lockApp();
+            }
+        }
+
+        function lockApp() {
+            state.security.locked = true;
+            document.getElementById('lock-screen').classList.remove('hidden');
+            sessionStorage.removeItem('unlocked');
+            clearPin();
+        }
+
+        let pinBuffer = "";
+        function enterPin(num) {
+            if (pinBuffer.length < 4) {
+                pinBuffer += num;
+                updatePinUI();
+                if (pinBuffer.length === 4) validatePin();
+            }
+        }
+
+        // Keyboard support for Lock Screen
+        function handleGlobalKeydown(e) {
+            if (state.security.locked) {
+                if (e.key >= '0' && e.key <= '9') {
+                    enterPin(e.key);
+                } else if (e.key === 'Backspace') {
+                    pinBuffer = pinBuffer.slice(0, -1);
+                    updatePinUI();
+                }
+            }
+        }
+
+        function updatePinUI() {
+            const inputs = document.querySelectorAll('.pin-input');
+            inputs.forEach((input, idx) => {
+                if (idx < pinBuffer.length) {
+                    input.value = '●';
+                    input.classList.add('border-primary');
+                } else {
+                    input.value = '';
+                    input.classList.remove('border-primary');
+                }
+            });
+        }
+
+        function validatePin() {
+            setTimeout(() => {
+                if (pinBuffer === state.security.pin) {
+                    // Unlock
+                    document.getElementById('lock-screen').classList.add('hidden');
+                    state.security.locked = false;
+                    sessionStorage.setItem('unlocked', 'true');
+                    clearPin();
+                } else {
+                    // Shake / Error
+                    const dots = document.getElementById('pin-display');
+                    dots.classList.add('animate-pulse');
+                    setTimeout(() => dots.classList.remove('animate-pulse'), 500);
+                    clearPin();
+                }
+            }, 200);
+        }
+
+        function clearPin() {
+            pinBuffer = "";
+            updatePinUI();
+        }
+
+        function forgotPin() {
+            const key = prompt("Enter Recovery Secret Key:");
+            if (key === state.security.secret) {
+                const newP = prompt("Secret Verified. Enter new 4-digit PIN:");
+                if (newP && newP.length === 4) {
+                    state.security.pin = newP;
+                    showToast('success', 'PIN Reset', 'Please unlock with new PIN.');
+                    clearPin();
+                }
+            } else {
+                showToast('error', 'Error', 'Invalid Secret Key.');
+            }
+        }
+
+        function toggleAppLock() {
+            state.security.enabled = !state.security.enabled;
+            const btn = document.getElementById('btn-toggle-lock');
+            const dot = document.getElementById('toggle-lock-dot');
+            const setupArea = document.getElementById('security-setup-area');
+
+            if (state.security.enabled) {
+                btn.classList.replace('bg-gray-200', 'bg-primary');
+                btn.classList.replace('dark:bg-gray-700', 'bg-primary');
+                dot.classList.add('translate-x-6');
+                dot.classList.remove('translate-x-1');
+                setupArea.classList.remove('hidden');
+            } else {
+                btn.classList.replace('bg-primary', 'bg-gray-200');
+                btn.classList.replace('bg-primary', 'dark:bg-gray-700'); // simplistic toggle fix
+                dot.classList.remove('translate-x-6');
+                dot.classList.add('translate-x-1');
+                setupArea.classList.add('hidden');
+            }
+        }
+
+        function saveNewPin() {
+            const val = document.getElementById('setup-pin').value;
+            if (val.length === 4) {
+                state.security.pin = val;
+                showToast('success', 'Done', 'PIN Updated');
+            }
+        }
+
+        function copySecret() {
+            navigator.clipboard.writeText(state.security.secret);
+            showToast('success', 'Copied', 'Secret copied to clipboard!');
+        }
+
+        /* --- PROJECT LOGIC --- */
+        function renderProjects() {
+            const grid = document.getElementById('projects-container');
+            // Keep create card
+            const createCard = grid.firstElementChild;
+            grid.innerHTML = '';
+            grid.appendChild(createCard);
+
+            state.projects.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all group relative cursor-pointer";
+                card.onclick = (e) => {
+                    // Prevent click if action button clicked
+                    if (e.target.closest('button') || e.target.closest('.no-click')) return;
+                    openProjectDetail(p.id);
+                };
+                card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="bg-green-50 dark:bg-green-900/20 text-primary p-2 rounded-lg">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button onclick="openExportModal(false)" title="Export Project" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-primary no-click"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>
+                         <button onclick="promptDelete('project', ${p.id})" title="Delete Project" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-red-500 no-click"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                         <button onclick="openConfigModal(${p.id})" title="Project Configuration" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-primary no-click"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+                    </div>
+                </div>
+                <h3 class="font-semibold text-gray-800 dark:text-gray-200 text-sm truncate">${p.name}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 h-8">${p.desc}</p>
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-1.5">
+                    <div class="flex items-center text-xs text-gray-500 dark:text-gray-400"><svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>${p.date}</div>
+                    <div class="flex items-center text-xs text-gray-500 dark:text-gray-400"><svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>${p.docCount} Documents</div>
+                </div>
+            `;
+                grid.appendChild(card);
+            });
+
+            // Populate Table... (Keeping brevity, similar logic)
+        }
+
+        function openProjectDetail(id) {
+            state.currentProject = state.projects.find(p => p.id === id);
+            if (!state.currentProject) return;
+
+            state.selectedDocs.clear(); // Clear selections
+            updateBatchBar();
+
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('project-detail-view').classList.remove('hidden');
+            document.getElementById('header-new-project-btn').classList.add('hidden');
+            document.getElementById('header-import-btn').classList.add('hidden');
+            document.getElementById('sidebar-new-project-btn').classList.add('hidden');
+
+            // Update Breadcrumbs + Config Button
+            const headerLeft = document.getElementById('header-left');
+            headerLeft.innerHTML = `
+            <button onclick="goBackToDashboard()" title="Back to Dashboard" class="text-gray-500 hover:text-gray-800 dark:hover:text-white text-xs font-semibold flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Dashboard
+            </button>
+            <span class="text-gray-300">/</span>
+            <span class="font-semibold text-gray-800 dark:text-white text-sm truncate max-w-[150px]">${state.currentProject.name}</span>
+        `;
+
+            document.getElementById('detail-project-name').innerText = state.currentProject.name;
+            document.getElementById('detail-project-desc').innerText = state.currentProject.desc;
+
+            renderDocuments();
+            initDocumentFilter(); // Initialize filter dropdown
+        }
+
+        function goBackToDashboard() {
+            state.currentProject = null;
+            document.getElementById('project-detail-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            document.getElementById('header-new-project-btn').classList.remove('hidden');
+            document.getElementById('header-import-btn').classList.remove('hidden');
+            document.getElementById('sidebar-new-project-btn').classList.remove('hidden');
+
+            // Restore Search
+            document.getElementById('header-left').innerHTML = `
+             <div class="relative w-72 view-dashboard-only">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Search projects..." class="w-full pl-9 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:focus:bg-gray-800 transition-colors placeholder-gray-400 text-gray-700 dark:text-gray-200">
+             </div>
+        `;
+        }
+
+        function editProjectField(field) {
+            const newVal = prompt(`Edit Project ${field === 'name' ? 'Name' : 'Description'}:`, field === 'name' ? state.currentProject.name : state.currentProject.desc);
+            if (newVal) {
+                state.currentProject[field] = newVal;
+                document.getElementById(`detail-project-${field}`).innerText = newVal;
+                // Also update header breadcrumb if name changed
+                if (field === 'name') {
+                    openProjectDetail(state.currentProject.id); // Re-render header
+                }
+            }
+        }
+
+        /* --- DOCUMENT LOGIC --- */
+        function renderDocuments() {
+            let docs = state.documents.filter(d => d.projectId === state.currentProject.id);
+
+            // Apply status filter
+            if (state.documentFilter && state.documentFilter !== 'All') {
+                docs = docs.filter(d => d.status === state.documentFilter);
+            }
+
+            // Apply search filter
+            if (state.documentSearchQuery) {
+                docs = docs.filter(d => d.name.toLowerCase().includes(state.documentSearchQuery));
+            }
+
+            const grid = document.getElementById('documents-grid');
+            const tbody = document.getElementById('documents-table-body');
+
+            grid.innerHTML = '';
+            tbody.innerHTML = '';
+
+            docs.forEach(d => {
+                // Status Logic
+                let statusColor = 'bg-gray-100 text-gray-600';
+                let actionBtn = `<button class="text-xs bg-primary hover:bg-primary-hover text-white px-3 py-1.5 rounded transition-colors" onclick="showToast('info', 'Annotating', 'Opening annotation view...')">Annotate</button>`;
+
+                if (d.status === 'Annotated') {
+                    statusColor = 'bg-green-100 text-green-700';
+                    actionBtn = `<button class="text-xs border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-1.5 rounded transition-colors text-gray-600 dark:text-gray-300">View</button>`;
+                } else if (d.status === 'Review') {
+                    statusColor = 'bg-yellow-100 text-yellow-700';
+                    actionBtn = `<button class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded transition-colors">Review</button>`;
+                }
+
+                const isSelected = state.selectedDocs.has(d.id);
+                const checkState = isSelected ? 'checked' : '';
+                const checkboxShowClass = isSelected ? '' : 'opacity-0 group-hover:opacity-100';
+
+                // Grid Card
+                const card = document.createElement('div');
+                card.className = `bg-white dark:bg-gray-800 border ${isSelected ? 'border-primary ring-1 ring-primary' : 'border-gray-200 dark:border-gray-700'} rounded-lg p-4 shadow-sm hover:shadow-md transition-all group`;
+                card.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <div class="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <input type="checkbox" onchange="toggleDocSelect(${d.id})" ${checkState} class="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300 cursor-pointer transition-opacity ${checkboxShowClass}">
+                </div>
+                <h4 class="font-medium text-gray-800 dark:text-gray-200 truncate mb-1" title="${d.name}">${d.name}</h4>
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${statusColor}">${d.status}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400 mb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+                    <div><span class="block text-gray-400 dark:text-gray-500">Size</span>${d.size}</div>
+                    <div><span class="block text-gray-400 dark:text-gray-500">Tokens</span>${d.tokens}</div>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    ${actionBtn}
+                    <div class="flex gap-1">
+                        <button onclick="openExportModal(false)" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>
+                        <button onclick="promptDelete('document', ${d.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-red-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </div>
+                </div>
+            `;
+                grid.appendChild(card);
+
+                // Table Row
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${isSelected ? 'bg-green-50 dark:bg-green-900/10' : ''}`;
+                tr.innerHTML = `
+                <td class="px-4 py-3"><input type="checkbox" onchange="toggleDocSelect(${d.id})" ${checkState} class="rounded text-primary focus:ring-primary"></td>
+                <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">${d.name}</td>
+                <td class="px-4 py-3"><span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${statusColor}">${d.status}</span></td>
+                <td class="px-4 py-3 text-gray-500 text-xs">${d.size}</td>
+                <td class="px-4 py-3 text-gray-500 text-xs">${d.tokens}</td>
+                <td class="px-4 py-3 text-right flex justify-end gap-2 items-center h-full">
+                    ${actionBtn}
+                    <button onclick="promptDelete('document', ${d.id})" class="text-gray-400 hover:text-red-500 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleDocSelect(id) {
+            if (state.selectedDocs.has(id)) state.selectedDocs.delete(id);
+            else state.selectedDocs.add(id);
+            renderDocuments();
+            updateBatchBar();
+        }
+
+        function toggleSelectAll(source) {
+            const docs = state.documents.filter(d => d.projectId === state.currentProject.id);
+            if (source.checked) docs.forEach(d => state.selectedDocs.add(d.id));
+            else state.selectedDocs.clear();
+            renderDocuments();
+            updateBatchBar();
+        }
+
+        function updateBatchBar() {
+            const bar = document.getElementById('batch-actions-bar');
+            const count = document.getElementById('selected-count');
+            if (state.selectedDocs.size > 0) {
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+                count.innerText = state.selectedDocs.size;
+            } else {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+            }
+        }
+
+        function batchAction(action) {
+            if (action === 'delete') promptDelete('batch');
+            if (action === 'annotate') showToast('info', 'Batch Action', `Batch annotating ${state.selectedDocs.size} documents...`);
+        }
+
+        // Select All Documents
+        function selectAllDocuments() {
+            const docs = state.documents.filter(d => d.projectId === state.currentProject.id);
+            docs.forEach(d => state.selectedDocs.add(d.id));
+            renderDocuments();
+            updateBatchBar();
+        }
+
+        // Clear Selection
+        function clearSelection() {
+            state.selectedDocs.clear();
+            renderDocuments();
+            updateBatchBar();
+        }
+
+        /* --- COMMON ACTIONS --- */
+        function promptDelete(type, id) {
+            state.deleteType = type;
+            state.deleteTarget = id;
+            document.getElementById('delete-modal').classList.add('active');
+
+            const title = document.getElementById('delete-title');
+            const msg = document.getElementById('delete-msg');
+
+            if (type === 'batch') {
+                title.innerText = "Delete Multiple Documents?";
+                msg.innerText = `Are you sure you want to delete ${state.selectedDocs.size} documents?`;
+            } else if (type === 'project') {
+                title.innerText = "Delete Project?";
+                msg.innerText = "This will delete the project and all containing documents.";
+            } else {
+                title.innerText = "Delete Document?";
+                msg.innerText = "Are you sure you want to delete this file?";
+            }
+        }
+
+        function confirmDelete() {
+            if (state.deleteType === 'project') {
+                state.projects = state.projects.filter(p => p.id !== state.deleteTarget);
+                renderProjects();
+            } else if (state.deleteType === 'document') {
+                state.documents = state.documents.filter(d => d.id !== state.deleteTarget);
+                renderDocuments();
+            } else if (state.deleteType === 'batch') {
+                state.documents = state.documents.filter(d => !state.selectedDocs.has(d.id));
+                state.selectedDocs.clear();
+                updateBatchBar();
+                renderDocuments();
+            }
+            closeModal('delete-modal');
+        }
+
+        function openExportModal(isBatch) {
+            document.getElementById('export-modal').classList.add('active');
+        }
+
+        function confirmExport(format) {
+            showToast('success', 'Exporting', `Exporting as ${format.toUpperCase()}...`);
+            closeModal('export-modal');
+        }
+
+        /* --- IMPORT PROJECT --- */
+        let importFile = null;
+
+        function openImportModal() {
+            document.getElementById('import-modal').classList.add('active');
+        }
+
+        function handleImportFile(input) {
+            const file = input.files[0];
+            if (file) {
+                importFile = file;
+                document.getElementById('import-confirm-btn').disabled = false;
+                // Show file name in drop zone
+                const dropZone = document.getElementById('import-drop-zone');
+                dropZone.innerHTML = `
+                    <svg class="w-12 h-12 text-primary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p class="text-base font-semibold text-primary mb-1">${file.name}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">${(file.size / 1024).toFixed(2)} KB</p>
+                `;
+            }
+        }
+
+        function processImport() {
+            if (!importFile) return;
+            // Mock import
+            showToast('success', 'Importing', `Importing project from ${importFile.name}...`);
+            closeModal('import-modal');
+            // Reset
+            importFile = null;
+            document.getElementById('import-file-input').value = '';
+            document.getElementById('import-confirm-btn').disabled = true;
+        }
+
+        /* --- UI HELPERS --- */
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            updateThemeText();
+        }
+
+        function updateThemeText() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-text').innerText = isDark ? "Switch to Light Mode" : "Switch to Dark Mode";
+        }
+
+        function toggleView(viewType) {
+            state.view = viewType;
+            const btnGrid = document.getElementById('view-grid-btn');
+            const btnTable = document.getElementById('view-table-btn');
+
+            // Visual toggle
+            if (viewType === 'grid') {
+                btnGrid.classList.add('bg-white', 'dark:bg-gray-600', 'shadow-sm', 'text-primary', 'dark:text-primary');
+                btnGrid.classList.remove('text-gray-500');
+                btnTable.classList.remove('bg-white', 'dark:bg-gray-600', 'shadow-sm', 'text-primary', 'dark:text-primary');
+                btnTable.classList.add('text-gray-500');
+            } else {
+                btnTable.classList.add('bg-white', 'dark:bg-gray-600', 'shadow-sm', 'text-primary', 'dark:text-primary');
+                btnTable.classList.remove('text-gray-500');
+                btnGrid.classList.remove('bg-white', 'dark:bg-gray-600', 'shadow-sm', 'text-primary', 'dark:text-primary');
+                btnGrid.classList.add('text-gray-500');
+            }
+
+            // Logic toggle based on context
+            if (state.currentProject) {
+                // Inside Project
+                if (viewType === 'grid') {
+                    document.getElementById('documents-grid').classList.remove('hidden');
+                    document.getElementById('documents-grid').classList.add('grid');
+                    document.getElementById('documents-table').classList.add('hidden');
+                } else {
+                    document.getElementById('documents-grid').classList.add('hidden');
+                    document.getElementById('documents-grid').classList.remove('grid');
+                    document.getElementById('documents-table').classList.remove('hidden');
+                }
+            } else {
+                // Dashboard
+                if (viewType === 'grid') {
+                    document.getElementById('projects-grid').classList.remove('hidden');
+                    document.getElementById('projects-grid').classList.add('grid');
+                    document.getElementById('projects-table-container').classList.add('hidden');
+                } else {
+                    document.getElementById('projects-grid').classList.add('hidden');
+                    document.getElementById('projects-grid').classList.remove('grid');
+                    document.getElementById('projects-table-container').classList.remove('hidden');
+                    renderProjectsTable();
+                }
+            }
+        }
+
+        /* --- SETTINGS MODAL LOGIC --- */
+        function openSettingsModal() {
+            document.getElementById('settings-modal').classList.add('active');
+            switchSettingsTab('llm');
+        }
+
+        function switchSettingsTab(tab) {
+            // Hide all contents
+            ['llm', 'security', 'general'].forEach(t => {
+                document.getElementById(`set-content-${t}`).classList.add('hidden');
+                document.getElementById(`set-tab-${t}`).classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm', 'border-gray-200', 'text-primary');
+                document.getElementById(`set-tab-${t}`).classList.add('text-gray-600', 'dark:text-gray-400');
+            });
+
+            // Show active
+            document.getElementById(`set-content-${tab}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`set-tab-${tab}`);
+            activeTab.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm', 'border', 'border-gray-200', 'dark:border-gray-700', 'text-primary');
+            activeTab.classList.remove('text-gray-600', 'dark:text-gray-400');
+        }
+
+        function switchLLMSubTab(sub) {
+            const btns = document.querySelectorAll('#set-content-llm button[id^="llm-sub-"]');
+            btns.forEach(b => {
+                b.classList.remove('border-primary', 'text-primary');
+                b.classList.add('border-transparent', 'text-gray-500');
+            });
+            const active = document.getElementById(`llm-sub-${sub}`);
+            active.classList.add('border-primary', 'text-primary');
+            active.classList.remove('border-transparent', 'text-gray-500');
+
+            const area = document.getElementById('llm-config-area');
+            if (sub === 'local') {
+                area.innerHTML = `
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
+                    <h3 class="font-bold mb-4">Local LLM Configuration</h3>
+                     <div class="mb-4">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Provider</label>
+                        <div id="local-provider-dd"></div>
+                    </div>
+                    <input type="text" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm mb-4" placeholder="Base URL (e.g. http://localhost:11434)">
+                     <button class="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded">Connect</button>
+                </div>
+            `;
+                renderDropdown(['Ollama', 'LM Studio', 'LocalAI'], 'Ollama', (v) => { }, 'local-provider-dd');
+            } else {
+                area.innerHTML = `
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
+                    <h3 class="font-bold mb-4">${sub.charAt(0).toUpperCase() + sub.slice(1)} API Configuration</h3>
+                    <input type="password" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm mb-4" placeholder="Enter API Key">
+                    <div class="flex gap-2 items-end mb-4">
+                        <button class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-xs font-medium rounded text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">Test Key</button>
+                        <button onclick="fetchModels('${sub}')" class="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">Fetch Models</button>
+                        <div class="flex-grow"></div>
+                        <button class="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-primary-hover">Save</button>
+                    </div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Select Default Model</label>
+                    <div id="${sub}-models-dd" class="w-full"></div>
+                </div>
+            `;
+                // Init placeholder dropdown
+                renderDropdown(['(Fetch models first)'], 'Select Default Model', (v) => { }, `${sub}-models-dd`);
+            }
+        }
+
+        function fetchModels(provider) {
+            const dummyModels = {
+                'openai': ['gpt-4-turbo', 'gpt-3.5-turbo', 'gpt-4o'],
+                'anthropic': ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
+                'gemini': ['gemini-1.5-pro', 'gemini-1.5-flash'],
+                'mistral': ['mistral-large', 'mistral-small', 'mixtral-8x7b']
+            };
+            const models = dummyModels[provider] || ['model-v1', 'model-v2'];
+
+            // Re-render dropdown with models
+            renderDropdown(models, models[0], (v) => { console.log(`Selected ${v}`) }, `${provider}-models-dd`);
+        }
+
+        /* --- FULL CONFIGURATION LOGIC --- */
+        function openConfigModal(id) {
+            state.currentProject = state.projects.find(p => p.id === id);
+            if (!state.currentProject) return;
+
+            // Ensure Labels/Rules arrays exist
+            if (!state.currentProject.labels) state.currentProject.labels = [];
+            if (!state.currentProject.rules) state.currentProject.rules = [];
+
+            document.getElementById('config-modal-title').innerText = `Configuration: ${state.currentProject.name}`;
+            document.getElementById('config-modal').classList.add('active');
+            switchConfigTab('labels');
+            renderLabels();
+            renderRules();
+        }
+
+        function switchConfigTab(tab) {
+            if (tab === 'labels') {
+                document.getElementById('tab-btn-labels').className = "py-3 text-sm font-medium text-primary border-b-2 border-primary transition-all";
+                document.getElementById('tab-btn-rules').className = "py-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent transition-all";
+                document.getElementById('tab-content-labels').classList.remove('hidden');
+                document.getElementById('tab-content-rules').classList.add('hidden');
+            } else {
+                document.getElementById('tab-btn-rules').className = "py-3 text-sm font-medium text-primary border-b-2 border-primary transition-all";
+                document.getElementById('tab-btn-labels').className = "py-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent transition-all";
+                document.getElementById('tab-content-rules').classList.remove('hidden');
+                document.getElementById('tab-content-labels').classList.add('hidden');
+            }
+        }
+
+        function selectColor(btn, colorClass) {
+            document.getElementById('input-label-color').value = colorClass;
+            // Reset rings
+            const btns = btn.parentElement.querySelectorAll('button');
+            btns.forEach(b => {
+                b.classList.remove('ring-gray-400', 'dark:ring-gray-500');
+                b.classList.add('ring-transparent');
+            });
+            // Set active ring
+            btn.classList.remove('ring-transparent');
+            btn.classList.add('ring-gray-400', 'dark:ring-gray-500');
+        }
+
+        function saveLabel() {
+            const name = document.getElementById('input-label-name').value;
+            const desc = document.getElementById('input-label-desc').value;
+            const color = document.getElementById('input-label-color').value;
+
+            if (!name) {
+                showToast('error', 'Error', 'Please enter a label name');
+                return;
+            }
+
+            // Check if editing existing label
+            if (state.editingLabelIndex !== null) {
+                state.currentProject.labels[state.editingLabelIndex] = { name, desc, color };
+                state.editingLabelIndex = null;
+                document.getElementById('save-label-btn').innerText = 'Save Label';
+            } else {
+                state.currentProject.labels.push({ name, desc, color });
+            }
+
+            // Clear fields
+            document.getElementById('input-label-name').value = '';
+            document.getElementById('input-label-desc').value = '';
+            document.getElementById('input-label-color').value = 'bg-blue-500';
+
+            // Reset color selection UI
+            const colorButtons = document.querySelectorAll('#tab-content-labels button[onclick^="selectColor"]');
+            colorButtons.forEach(b => {
+                b.classList.remove('ring-gray-400', 'dark:ring-gray-500');
+                b.classList.add('ring-transparent');
+            });
+
+            renderLabels();
+        }
+
+        function editLabel(idx) {
+            const label = state.currentProject.labels[idx];
+            document.getElementById('input-label-name').value = label.name;
+            document.getElementById('input-label-desc').value = label.desc || '';
+            document.getElementById('input-label-color').value = label.color;
+
+            // Update button
+            document.getElementById('save-label-btn').innerText = 'Update Label';
+            state.editingLabelIndex = idx;
+
+            // Highlight selected color
+            const colorButtons = document.querySelectorAll('#tab-content-labels button[onclick^="selectColor"]');
+            colorButtons.forEach(b => {
+                const btnColor = b.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (btnColor === label.color) {
+                    b.classList.remove('ring-transparent');
+                    b.classList.add('ring-gray-400', 'dark:ring-gray-500');
+                } else {
+                    b.classList.remove('ring-gray-400', 'dark:ring-gray-500');
+                    b.classList.add('ring-transparent');
+                }
+            });
+        }
+
+        function deleteLabel(idx) {
+            showConfirm('Delete Label?', 'Are you sure you want to delete this label?', () => {
+                state.currentProject.labels.splice(idx, 1);
+                renderLabels();
+                showToast('success', 'Deleted', 'Label removed successfully.');
+            }, true);
+        }
+
+        function renderLabels() {
+            const list = document.getElementById('labels-list');
+            list.innerHTML = '';
+            state.currentProject.labels.forEach((l, index) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-transparent hover:border-gray-100 dark:hover:border-gray-600 group";
+                item.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full ${l.color}"></div>
+                    <div>
+                        <div class="font-medium text-gray-800 dark:text-gray-200 text-sm">${l.name}</div>
+                        ${l.desc ? `<div class="text-xs text-gray-500 dark:text-gray-400">${l.desc}</div>` : ''}
+                    </div>
+                </div>
+                <div class="flex gap-1 opacity-0 group-hover:opacity-100">
+                    <button onclick="editLabel(${index})" title="Edit Label" class="text-gray-400 hover:text-primary p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                    <button onclick="deleteLabel(${index})" title="Delete Label" class="text-gray-400 hover:text-red-500 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+            `;
+                list.appendChild(item);
+            });
+
+            // Update Chips for Rules
+            const chips = document.getElementById('rule-chips');
+            chips.innerHTML = '';
+            state.currentProject.labels.forEach(l => {
+                const btn = document.createElement('button');
+                btn.className = "px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600";
+                btn.innerText = `#${l.name}`;
+                btn.onclick = () => insertLabelIntoRule(l.name);
+                chips.appendChild(btn);
+            });
+        }
+
+        function insertLabelIntoRule(name) {
+            const area = document.getElementById('input-rule-logic');
+            area.value += ` {{${name}}} `;
+        }
+
+        function saveRule() {
+            const name = document.getElementById('input-rule-name').value;
+            const logic = document.getElementById('input-rule-logic').value;
+
+            if (!name) {
+                showToast('error', 'Error', 'Please enter a rule name');
+                return;
+            }
+
+            // Check if editing existing rule
+            if (state.editingRuleIndex !== null) {
+                state.currentProject.rules[state.editingRuleIndex] = { name, logic };
+                state.editingRuleIndex = null;
+                document.getElementById('save-rule-btn').innerText = 'Save Rule';
+            } else {
+                state.currentProject.rules.push({ name, logic });
+            }
+
+            // Clear fields
+            document.getElementById('input-rule-name').value = '';
+            document.getElementById('input-rule-logic').value = '';
+
+            renderRules();
+        }
+
+        function editRule(idx) {
+            const rule = state.currentProject.rules[idx];
+            document.getElementById('input-rule-name').value = rule.name;
+            document.getElementById('input-rule-logic').value = rule.logic;
+
+            document.getElementById('save-rule-btn').innerText = 'Update Rule';
+            state.editingRuleIndex = idx;
+        }
+
+        function deleteRule(idx) {
+            showConfirm('Delete Rule?', 'Are you sure you want to delete this rule?', () => {
+                state.currentProject.rules.splice(idx, 1);
+                renderRules();
+                showToast('success', 'Deleted', 'Rule removed successfully.');
+            }, true);
+        }
+
+        function renderRules() {
+            const list = document.getElementById('rules-list');
+            list.innerHTML = '';
+            state.currentProject.rules.forEach((r, index) => {
+                const item = document.createElement('div');
+                item.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex justify-between items-start group hover:shadow-sm transition-all";
+                item.innerHTML = `
+                 <div class="flex-grow">
+                    <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">${r.name}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">${r.logic || 'No description provided'}</div>
+                </div>
+                <div class="flex gap-1 opacity-0 group-hover:opacity-100 ml-2">
+                    <button onclick="editRule(${index})" title="Edit Rule" class="text-gray-400 hover:text-primary p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                    <button onclick="deleteRule(${index})" title="Delete Rule" class="text-gray-400 hover:text-red-500 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+            `;
+                list.appendChild(item);
+            });
+        }
+
+        /* --- DOCUMENT FILTER --- */
+        function initDocumentFilter() {
+            const statuses = ['All', 'Ready', 'Annotated', 'Review'];
+            renderDropdown(statuses, state.documentFilter, (val) => {
+                state.documentFilter = val;
+                renderDocuments();
+            }, 'document-filter-dropdown');
+        }
+
+        /* --- HELPERS --- */
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function openHelpModal() { document.getElementById('help-modal').classList.add('active'); }
+        function openAboutModal() { document.getElementById('about-modal').classList.add('active'); }
+        function renderRecentSidebar() {
+            const list = document.getElementById('recent-projects-list');
+            list.innerHTML = '';
+            state.projects.slice(0, 5).forEach(p => {
+                const li = document.createElement('li');
+                li.className = "sidebar-item flex items-center px-2 py-1.5 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer overflow-hidden whitespace-nowrap group relative";
+                li.onclick = () => openProjectDetail(p.id);
+                li.innerHTML = `
+                <svg class="sidebar-icon w-4 h-4 mr-2 text-gray-400 min-w-[1rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span class="nav-text truncate">${p.name}</span>
+                <span class="sidebar-tooltip">${p.name}</span>
+            `;
+                list.appendChild(li);
+            });
+        }
+
+        /* --- CUSTOM DROPDOWN --- */
+        function initCustomDropdowns() {
+            renderDropdown(['OpenAI', 'Anthropic', 'Gemini', 'Mistral', 'Ollama (Local)'], 'OpenAI', (val) => {
+                state.settings.defaultProvider = val;
+            }, 'default-provider-dropdown');
+        }
+
+        function renderDropdown(options, selected, onChange, targetId) {
+            const container = document.getElementById(targetId);
+            if (!container) return;
+
+            container.innerHTML = `
+            <div class="custom-select relative w-full text-sm" tabindex="0">
+                <div class="custom-select-trigger bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 flex justify-between items-center text-gray-700 dark:text-gray-200">
+                    <span>${selected}</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div class="custom-options absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg mt-1 z-20 overflow-hidden max-h-48 overflow-y-auto">
+                    ${options.map(opt => `<div class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-700 dark:text-gray-200" data-value="${opt}">${opt}</div>`).join('')}
+                </div>
+            </div>
+        `;
+
+            const trigger = container.querySelector('.custom-select-trigger');
+            const customSelect = container.querySelector('.custom-select');
+            const optionEls = container.querySelectorAll('.custom-options div');
+
+            trigger.addEventListener('click', () => {
+                customSelect.classList.toggle('open');
+            });
+
+            optionEls.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const val = opt.getAttribute('data-value');
+                    trigger.querySelector('span').textContent = val;
+                    customSelect.classList.remove('open');
+                    onChange(val);
+                });
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    customSelect.classList.remove('open');
+                }
+            });
+        }
+
+        /* --- PROJECT MODAL FUNCTIONS --- */
+        function openProjectModal() {
+            document.getElementById('new-project-name').value = '';
+            document.getElementById('new-project-desc').value = '';
+            document.getElementById('project-modal').classList.add('active');
+        }
+
+        function createProject() {
+            const name = document.getElementById('new-project-name').value.trim();
+            const desc = document.getElementById('new-project-desc').value.trim();
+            if (!name) {
+                showToast('error', 'Error', 'Please enter a project name');
+                return;
+            }
+            const newProject = {
+                id: Date.now(),
+                name: name,
+                desc: desc || 'No description',
+                docs: 0,
+                labels: [],
+                rules: []
+            };
+            state.projects.push(newProject);
+            closeModal('project-modal');
+            renderProjects();
+            renderRecentSidebar();
+            showToast('success', 'Project Created', `"${name}" has been created successfully.`);
+        }
+
+        function openEditProjectModal() {
+            if (!state.currentProject) return;
+            document.getElementById('edit-project-name').value = state.currentProject.name;
+            document.getElementById('edit-project-desc').value = state.currentProject.desc || '';
+            document.getElementById('edit-project-modal').classList.add('active');
+        }
+
+        function saveProjectEdit() {
+            const name = document.getElementById('edit-project-name').value.trim();
+            const desc = document.getElementById('edit-project-desc').value.trim();
+            if (!name) {
+                showToast('error', 'Error', 'Project name cannot be empty');
+                return;
+            }
+            state.currentProject.name = name;
+            state.currentProject.desc = desc;
+            // Update in projects array
+            const project = state.projects.find(p => p.id === state.currentProject.id);
+            if (project) {
+                project.name = name;
+                project.desc = desc;
+            }
+            document.getElementById('detail-project-name').innerText = name;
+            document.getElementById('detail-project-desc').innerText = desc;
+            closeModal('edit-project-modal');
+            showToast('success', 'Saved', 'Project updated successfully.');
+        }
+
+        /* --- UPLOAD MODAL FUNCTIONS --- */
+        let uploadFiles = [];
+
+        function openUploadModal() {
+            uploadFiles = [];
+            document.getElementById('upload-file-list').innerHTML = '';
+            document.getElementById('upload-file-list').classList.add('hidden');
+            document.getElementById('upload-confirm-btn').disabled = true;
+            resetUploadDropZone();
+            document.getElementById('upload-modal').classList.add('active');
+        }
+
+        function resetUploadDropZone() {
+            document.getElementById('upload-drop-zone').innerHTML = `
+                <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                </svg>
+                <p class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">Drag & Drop your files here</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">or click to browse</p>
+                <p class="text-xs text-gray-400">Supported: PDF, TXT, DOC, DOCX, MD (Max 10MB)</p>
+            `;
+        }
+
+        function handleModalFileUpload(input) {
+            const files = Array.from(input.files);
+            if (files.length > 0) {
+                uploadFiles = files;
+                document.getElementById('upload-confirm-btn').disabled = false;
+                const fileList = document.getElementById('upload-file-list');
+                fileList.innerHTML = files.map(f => `
+                    <div class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-sm">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="flex-grow truncate">${f.name}</span>
+                        <span class="text-xs text-gray-400">${(f.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                `).join('');
+                fileList.classList.remove('hidden');
+                document.getElementById('upload-drop-zone').innerHTML = `
+                    <svg class="w-12 h-12 text-primary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <p class="text-base font-semibold text-primary mb-1">${files.length} file${files.length > 1 ? 's' : ''} selected</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Click to change selection</p>
+                `;
+            }
+            input.value = '';
+        }
+
+        function processUpload() {
+            if (uploadFiles.length === 0) return;
+            uploadFiles.forEach(file => {
+                state.documents.push({
+                    id: Date.now() + Math.random(),
+                    projectId: state.currentProject.id,
+                    name: file.name,
+                    type: file.name.split('.').pop().toUpperCase(),
+                    size: `${(file.size / 1024).toFixed(1)} KB`,
+                    status: 'Ready',
+                    uploaded: new Date().toLocaleDateString()
+                });
+            });
+            closeModal('upload-modal');
+            renderDocuments();
+            showToast('success', 'Upload Complete', `${uploadFiles.length} document${uploadFiles.length > 1 ? 's' : ''} uploaded successfully.`);
+            uploadFiles = [];
+        }
+
+        /* --- VIDEO MODAL FUNCTIONS --- */
+        function openVideoModal() {
+            document.getElementById('video-iframe').src = 'https://www.youtube.com/embed/9iDXWx7GtZQ?autoplay=1';
+            document.getElementById('video-modal').classList.add('active');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('video-iframe').src = '';
+            document.getElementById('video-modal').classList.remove('active');
+        }
+
+        /* --- FORGOT PIN MODAL --- */
+        function openForgotPinModal() {
+            document.getElementById('forgot-pin-modal').classList.add('active');
+        }
+
+        function resetAllData() {
+            state.projects = [];
+            state.documents = [];
+            state.security = { locked: false, pin: null };
+            closeModal('forgot-pin-modal');
+            document.getElementById('lock-screen').classList.add('hidden');
+            showToast('success', 'Reset Complete', 'All data has been cleared. App unlocked.');
+            renderProjects();
+        }
+
+        /* --- TOAST NOTIFICATION --- */
+        function showToast(type, title, message) {
+            const toast = document.getElementById('notification-toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-message').textContent = message;
+
+            if (type === 'success') {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 text-green-600';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            } else if (type === 'error') {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-red-100 text-red-600';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            } else {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-blue-100 text-blue-600';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            }
+
+            toast.classList.remove('translate-x-full');
+            toast.classList.add('translate-x-0');
+            setTimeout(() => hideToast(), 4000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('notification-toast');
+            toast.classList.remove('translate-x-0');
+            toast.classList.add('translate-x-full');
+        }
+
+        /* --- CUSTOM CONFIRM DIALOG --- */
+        let confirmCallback = null;
+
+        function showConfirm(title, message, onConfirm, isDanger = false) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            const btn = document.getElementById('confirm-action-btn');
+            if (isDanger) {
+                btn.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium';
+                btn.textContent = 'Delete';
+            } else {
+                btn.className = 'px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium';
+                btn.textContent = 'Confirm';
+            }
+            confirmCallback = onConfirm;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        function confirmOk() {
+            closeModal('confirm-modal');
+            if (confirmCallback) confirmCallback();
+            confirmCallback = null;
+        }
+
+        function confirmCancel() {
+            closeModal('confirm-modal');
+            confirmCallback = null;
+        }
+
+        /* --- DOCUMENT SEARCH --- */
+        function filterDocuments() {
+            const query = document.getElementById('document-search').value.toLowerCase();
+            state.documentSearchQuery = query;
+            renderDocuments();
+        }
+
+        /* --- TABLE VIEW RENDERING FOR PROJECTS --- */
+        function renderProjectsTable() {
+            const tbody = document.getElementById('projects-table-body');
+            tbody.innerHTML = '';
+            state.projects.forEach(p => {
+                const docCount = state.documents.filter(d => d.projectId === p.id).length;
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer';
+                row.onclick = () => openProject(p.id);
+                row.innerHTML = `
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-green-50 dark:bg-green-900/20 text-primary rounded-lg flex items-center justify-center">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-800 dark:text-gray-200">${p.name}</div>
+                                <div class="text-xs text-gray-400 truncate max-w-[200px]">${p.desc}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500 text-sm">${new Date().toLocaleDateString()}</td>
+                    <td class="px-4 py-3 text-gray-500 text-sm">${docCount} documents</td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex justify-end gap-1">
+                            <button onclick="event.stopPropagation(); openExportModal(false)" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-primary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>
+                            <button onclick="event.stopPropagation(); promptDelete('project', ${p.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-red-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            <button onclick="event.stopPropagation(); openConfigModal(${p.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-primary"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        /* --- FIX deleteLabel and deleteRule to use custom confirm --- */
+        function deleteLabelWithConfirm(idx) {
+            showConfirm('Delete Label?', 'Are you sure you want to delete this label?', () => {
+                state.currentProject.labels.splice(idx, 1);
+                renderLabels();
+                showToast('success', 'Deleted', 'Label removed successfully.');
+            }, true);
+        }
+
+        function deleteRuleWithConfirm(idx) {
+            showConfirm('Delete Rule?', 'Are you sure you want to delete this rule?', () => {
+                state.currentProject.rules.splice(idx, 1);
+                renderRules();
+                showToast('success', 'Deleted', 'Rule removed successfully.');
+            }, true);
+        }
+
+    </script>
+</body>
+
+</html>

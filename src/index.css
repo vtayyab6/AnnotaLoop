@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+.scroll-custom::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.scroll-custom::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroll-custom::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.scroll-custom::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.dark .scroll-custom::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.dark .scroll-custom::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Docx preview styles */
+.docx-wrapper {
+    font-family: 'Calibri', 'Arial', sans-serif;
+}
+
+.docx-wrapper table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.docx-wrapper table td,
+.docx-wrapper table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+/* Sidebar tooltip styles - CRITICAL: Must be visible on hover */
+.sidebar-tooltip {
+    position: fixed;
+    left: 72px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+    z-index: 9999;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item {
+    position: relative;
+}
+
+.sidebar-item:hover .sidebar-tooltip {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.dark .sidebar-tooltip {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #1f2937;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
