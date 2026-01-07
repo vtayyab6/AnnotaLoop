@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Upload, PlayCircle, FileText, Brain, UserCheck, FolderOutput, ArrowRight, LayoutTemplate } from 'lucide-react';
+import { Plus, Upload, PlayCircle, LayoutTemplate } from 'lucide-react';
 
 interface EmptyStateProps {
     onCreateProject: () => void;

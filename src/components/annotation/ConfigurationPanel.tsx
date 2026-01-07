@@ -22,11 +22,11 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({ doc, project })
     // -- Editing State --
     const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
     const [editingLabelIdx, setEditingLabelIdx] = useState<number | null>(null); // If null, adding new.
-    const [currentLabel, setCurrentLabel] = useState<Label>({ name: '', desc: '', color: 'bg-blue-500' });
+    const [currentLabel, setCurrentLabel] = useState<Label>({ id: '', name: '', desc: '', color: 'bg-blue-500' });
 
     const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
     const [editingRuleIdx, setEditingRuleIdx] = useState<number | null>(null);
-    const [currentRule, setCurrentRule] = useState<Rule>({ name: '', logic: '' });
+    const [currentRule, setCurrentRule] = useState<Rule>({ id: '', name: '', logic: '' });
 
     // Values to display: prefer document specific, fallback to project defaults
     const hasLabelOverride = !!doc.labels;
@@ -57,7 +57,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({ doc, project })
     // --- Label Handlers ---
     const openAddLabel = () => {
         const nextColor = getNextColor(effectiveLabels);
-        setCurrentLabel({ name: '', desc: '', color: nextColor });
+        setCurrentLabel({ id: '', name: '', desc: '', color: nextColor });
         setEditingLabelIdx(null);
         setIsLabelModalOpen(true);
     };
@@ -124,7 +124,7 @@ const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({ doc, project })
 
     // --- Rule Handlers ---
     const openAddRule = () => {
-        setCurrentRule({ name: '', logic: '' });
+        setCurrentRule({ id: '', name: '', logic: '' });
         setEditingRuleIdx(null);
         setIsRuleModalOpen(true);
     };

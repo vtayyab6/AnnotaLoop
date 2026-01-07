@@ -27,9 +27,9 @@ async function deriveKeyFromPin(pin: string, salt: Uint8Array): Promise<CryptoKe
         {
             name: 'PBKDF2',
             salt: salt,
-            iterations: 100000, // High iteration count for security
+            iterations: 100000,
             hash: 'SHA-256'
-        },
+        } as Pbkdf2Params,
         keyMaterial,
         { name: 'AES-GCM', length: 256 },
         false,
