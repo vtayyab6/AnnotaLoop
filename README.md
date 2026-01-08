@@ -42,14 +42,6 @@ Get the latest version of AnnotaLoop for your platform:
 
 AnnotaLoop is a powerful desktop application that streamlines document annotation workflows using AI assistance. It combines state-of-the-art Large Language Models with human oversight to create high-quality, structured data from documents.
 
-<div align="center">
-
-![AnnotaLoop Workflow](docs/screenshots/workflow-illustration.png)
-
-*Document → AI Suggests → Human Reviews → Structured Output*
-
-</div>
-
 ### Perfect For
 
 - **Researchers** extracting structured data from academic papers
@@ -58,21 +50,21 @@ AnnotaLoop is a powerful desktop application that streamlines document annotatio
 - **Content analysts** categorizing and tagging documents
 - **Anyone** who needs to extract structured information from text documents
 
----
-
 ## How It Works
-
-<div align="center">
-
-![Complete Workflow](docs/screenshots/workflow.png)
-
-</div>
 
 1. **Import** your documents (PDF, DOCX, TXT, Markdown)
 2. **Configure** labels and extraction rules for your use case
 3. **Process** with AI - the LLM suggests annotations based on your rules
-4. **Review** all suggestions in an intuitive interface
+4. **Review** all suggestions in an intuitive interface with human-in-the-loop validation
 5. **Export** accepted annotations in your preferred format
+
+<div align="center">
+
+![AnnotaLoop Workflow](docs/screenshots/workflow-illustration.png)
+
+*Document → AI Suggests → Human Reviews → Structured Output*
+
+</div>
 
 ---
 
@@ -110,7 +102,7 @@ Get started quickly with these comprehensive video guides:
 <div align="center">
 
 ### Welcome Screen
-![Empty State](docs/screenshots/empty-state.png)
+![Welcome Screen](docs/screenshots/empty-state.png)
 *Get started with your first project or import existing work*
 
 ---
@@ -121,33 +113,39 @@ Get started quickly with these comprehensive video guides:
 
 ---
 
-### Project Configuration
-![Configuration Labels](docs/screenshots/config-labels.png)
-*Define custom labels for document annotation*
-
----
-
-### Configuration Modal
-![Configuration Modal](docs/screenshots/config-modal.png)
-*Set up extraction rules for intelligent data extraction*
-
----
-
 ### Project Dashboard
 ![Project Dashboard](docs/screenshots/project-dashboard.png)
 *Manage and track all your documents in one place*
 
 ---
 
-### Review Annotations
+### Project Configuration - Labels
+![Configuration Labels](docs/screenshots/config-labels.png)
+*Define custom labels for document annotation*
+
+---
+
+### Project Configuration - Rules & Settings
+![Configuration Modal](docs/screenshots/config-modal.png)
+*Set up extraction rules for intelligent data extraction*
+
+---
+
+### Local LLM Support - Coming Soon
+![Local LLM Coming Soon](docs/screenshots/llm-integration.png)
+*Local LLM support (Ollama, LM Studio) is currently under development*
+
+---
+
+### Review Annotations - Human-in-the-Loop
 ![Review Panel](docs/screenshots/review-panel.png)
-*Review AI-suggested annotations with confidence scores*
+*Review AI-suggested annotations with human-in-the-loop validation and confidence scores*
 
 ---
 
 ### Export & Analysis
 ![Export Page](docs/screenshots/export-page.png)
-*Export your annotated data in multiple formats*
+*Export your annotated data in multiple formats (JSON, CSV, PDF)*
 
 </div>
 
