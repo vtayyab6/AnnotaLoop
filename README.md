@@ -8,25 +8,25 @@
 [![GitHub release](https://img.shields.io/github/v/release/tayyab-nlp/AnnotaLoop)](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tayyab-nlp/AnnotaLoop/total)](https://github.com/tayyab-nlp/AnnotaLoop/releases)
 
-[Website](https://tayyab.io/annotaloop) • [Download](#-download) • [Documentation](#-features) • [Videos](#-video-tutorials) • [Support](https://github.com/tayyab-nlp/AnnotaLoop/issues)
+[Website](https://tayyab.io/annotaloop) • [Download](#download) • [Features](#features) • [Videos](#video-tutorials) • [Support](https://github.com/tayyab-nlp/AnnotaLoop/issues)
 
 </div>
 
 ---
 
-## 📥 Download
+## Download
 
 Get the latest version of AnnotaLoop for your platform:
 
 | Platform | Download Link | Architecture |
 |----------|--------------|--------------|
-| **🍎 macOS (Apple Silicon)** | [Download DMG](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_aarch64.dmg) | ARM64 |
-| **🍎 macOS (Intel)** | [Download DMG](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_x64.dmg) | x64 |
-| **🪟 Windows** | [Download Installer](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_x64-setup.exe) | x64 |
-| **🐧 Linux (AppImage)** | [Download AppImage](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_amd64.AppImage) | x86_64 |
-| **🐧 Linux (Debian)** | [Download .deb](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_amd64.deb) | x86_64 |
+| **macOS (Apple Silicon)** | [⬇️ Download DMG](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_aarch64.dmg) | ARM64 |
+| **macOS (Intel)** | [⬇️ Download DMG](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_x64.dmg) | x64 |
+| **Windows** | [⬇️ Download Installer](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_x64-setup.exe) | x64 |
+| **Linux (AppImage)** | [⬇️ Download AppImage](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_amd64.AppImage) | x86_64 |
+| **Linux (Debian)** | [⬇️ Download .deb](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest/download/anotaloopv2_amd64.deb) | x86_64 |
 
-> **💡 Note:** For all available versions, visit the [Releases page](https://github.com/tayyab-nlp/AnnotaLoop/releases).
+> **Note:** For all available versions, visit the [Releases page](https://github.com/tayyab-nlp/AnnotaLoop/releases).
 
 ### macOS Installation
 
@@ -38,11 +38,19 @@ Get the latest version of AnnotaLoop for your platform:
 
 ---
 
-## ✨ What is AnnotaLoop?
+## What is AnnotaLoop?
 
 AnnotaLoop is a powerful desktop application that streamlines document annotation workflows using AI assistance. It combines state-of-the-art Large Language Models with human oversight to create high-quality, structured data from documents.
 
-### 🎯 Perfect For
+<div align="center">
+
+![AnnotaLoop Workflow](docs/screenshots/workflow-illustration.png)
+
+*Document → AI Suggests → Human Reviews → Structured Output*
+
+</div>
+
+### Perfect For
 
 - **Researchers** extracting structured data from academic papers
 - **Legal professionals** analyzing contracts and legal documents
@@ -52,27 +60,11 @@ AnnotaLoop is a powerful desktop application that streamlines document annotatio
 
 ---
 
-## 🚀 Features
-
-### Core Capabilities
-
-- 🤖 **AI-Powered Annotation** - Leverage cloud LLM providers (Mistral AI, OpenAI, Claude, Gemini, OpenRouter)
-- 📄 **Multi-Format Support** - Process PDFs, Word documents, text files, and Markdown
-- 🏷️ **Custom Labels & Rules** - Define your own annotation schema with extraction rules
-- ✅ **Human-in-the-Loop** - Review, accept, reject, or modify AI suggestions
-- 📦 **Batch Processing** - Annotate multiple documents efficiently
-- 💾 **Flexible Export** - Export to JSON, CSV, or annotated PDFs
-- 🔄 **Project Management** - Organize documents into projects with reusable configurations
-- 🔐 **Security** - Optional PIN-based app lock for sensitive data
-- 🌓 **Dark Mode** - Beautiful light and dark themes
-
-### Workflow
+## How It Works
 
 <div align="center">
 
-![AnnotaLoop Workflow](docs/screenshots/workflow.png)
-
-*Document → AI Suggests → Human Reviews → Structured Output*
+![Complete Workflow](docs/screenshots/workflow.png)
 
 </div>
 
@@ -84,43 +76,84 @@ AnnotaLoop is a powerful desktop application that streamlines document annotatio
 
 ---
 
-## 📺 Video Tutorials
+## Features
+
+### Core Capabilities
+
+- **AI-Powered Annotation** - Leverage cloud LLM providers (Mistral AI, OpenAI, Claude, Gemini, OpenRouter)
+- **Multi-Format Support** - Process PDFs, Word documents, text files, and Markdown
+- **Custom Labels & Rules** - Define your own annotation schema with extraction rules
+- **Human-in-the-Loop** - Review, accept, reject, or modify AI suggestions
+- **Batch Processing** - Annotate multiple documents efficiently
+- **Flexible Export** - Export to JSON, CSV, or annotated PDFs
+- **Project Management** - Organize documents into projects with reusable configurations
+- **Security** - Optional PIN-based app lock for sensitive data
+- **Dark Mode** - Beautiful light and dark themes
+
+---
+
+## Video Tutorials
 
 Get started quickly with these comprehensive video guides:
 
 | Tutorial | Description |
 |----------|-------------|
-| [🎬 Start Your First Project](https://tayyab.io/annotaloop/#video-complete-workflow) | Complete walkthrough from setup to export |
-| [⚙️ LLM Setup Guide](https://tayyab.io/annotaloop/#video-llm-setup) | Configure your AI provider |
-| [📦 Batch Processing](https://tayyab.io/annotaloop/#video-batch-processing) | Process multiple documents at once |
-| [📤 Import & Export](https://tayyab.io/annotaloop/#video-import-export) | Manage your annotation projects |
+| [Start Your First Project](https://tayyab.io/annotaloop/#video-complete-workflow) | Complete walkthrough from setup to export |
+| [LLM Setup Guide](https://tayyab.io/annotaloop/#video-llm-setup) | Configure your AI provider |
+| [Batch Processing](https://tayyab.io/annotaloop/#video-batch-processing) | Process multiple documents at once |
+| [Import & Export](https://tayyab.io/annotaloop/#video-import-export) | Manage your annotation projects |
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 <div align="center">
 
-### Welcome Screen - Getting Started
+### Welcome Screen
 ![Empty State](docs/screenshots/empty-state.png)
+*Get started with your first project or import existing work*
 
-### Project Configuration - Labels & Rules
+---
+
+### LLM Integration
+![LLM Integration](docs/screenshots/llm-integration.png)
+*Connect to your preferred AI provider with secure API key storage*
+
+---
+
+### Project Configuration
+![Configuration Labels](docs/screenshots/config-labels.png)
+*Define custom labels for document annotation*
+
+---
+
+### Configuration Modal
 ![Configuration Modal](docs/screenshots/config-modal.png)
+*Set up extraction rules for intelligent data extraction*
 
-### Project Dashboard - Document Management
+---
+
+### Project Dashboard
 ![Project Dashboard](docs/screenshots/project-dashboard.png)
+*Manage and track all your documents in one place*
 
-### Review Panel - AI Annotations
+---
+
+### Review Annotations
 ![Review Panel](docs/screenshots/review-panel.png)
+*Review AI-suggested annotations with confidence scores*
+
+---
 
 ### Export & Analysis
 ![Export Page](docs/screenshots/export-page.png)
+*Export your annotated data in multiple formats*
 
 </div>
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend**: React + TypeScript + Tailwind CSS
 - **Backend**: Tauri (Rust)
@@ -131,7 +164,7 @@ Get started quickly with these comprehensive video guides:
 
 ---
 
-## 👩‍💻 Development
+## Development
 
 ### Prerequisites
 
@@ -183,7 +216,7 @@ AnnotaLoop/
 
 ---
 
-## 🔄 Auto-Updates
+## Auto-Updates
 
 AnnotaLoop includes automatic update functionality:
 
@@ -194,7 +227,7 @@ AnnotaLoop includes automatic update functionality:
 
 ---
 
-## 📜 License
+## License
 
 AnnotaLoop is open-source software licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
@@ -202,30 +235,30 @@ AnnotaLoop is open-source software licensed under the [MIT License](https://open
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Here's how you can help:
 
-1. 🐛 **Report bugs** via [Issues](https://github.com/tayyab-nlp/AnnotaLoop/issues)
-2. 💡 **Suggest features** by opening a discussion
-3. 🔧 **Submit pull requests** for bug fixes or features
-4. 📖 **Improve documentation**
-5. ⭐ **Star the repository** to show your support!
+1. Report bugs via [Issues](https://github.com/tayyab-nlp/AnnotaLoop/issues)
+2. Suggest features by opening a discussion
+3. Submit pull requests for bug fixes or features
+4. Improve documentation
+5. ⭐ Star the repository to show your support!
 
 ---
 
-## 🆘 Support
+## Support
 
 Need help or found a bug?
 
-- 📖 Check the [video tutorials](#-video-tutorials)
-- 💬 Open an [issue](https://github.com/tayyab-nlp/AnnotaLoop/issues)
-- 📧 Contact: [hello@tayyab.io](mailto:hello@tayyab.io)
-- 🌐 Visit: [tayyab.io/annotaloop](https://tayyab.io/annotaloop)
+- Check the [video tutorials](#video-tutorials)
+- Open an [issue](https://github.com/tayyab-nlp/AnnotaLoop/issues)
+- Contact: [hello@tayyab.io](mailto:hello@tayyab.io)
+- Visit: [tayyab.io/annotaloop](https://tayyab.io/annotaloop)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with modern open-source technologies and powered by state-of-the-art LLMs from:
 - Mistral AI
@@ -240,6 +273,6 @@ Built with modern open-source technologies and powered by state-of-the-art LLMs 
 
 Made with ❤️ by [Tayyab](https://tayyab.io)
 
-[⭐ Star on GitHub](https://github.com/tayyab-nlp/AnnotaLoop) • [🌐 Visit Website](https://tayyab.io/annotaloop) • [📥 Download](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest)
+[⭐ Star on GitHub](https://github.com/tayyab-nlp/AnnotaLoop) • [Visit Website](https://tayyab.io/annotaloop) • [⬇️ Download](https://github.com/tayyab-nlp/AnnotaLoop/releases/latest)
 
 </div>
