@@ -1,4 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Download, RefreshCw, CheckCircle, AlertCircle, ExternalLink, Globe, Mail } from 'lucide-react';
+import { check as checkUpdate } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { getVersion } from '@tauri-apps/api/app';
+import { open } from '@tauri-apps/plugin-shell';
+import { useToast } from '../../context/ToastContext';
 
 interface AboutModalProps {
     isOpen: boolean;
@@ -6,25 +12,225 @@ interface AboutModalProps {
 }
 
 const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
+    const { addToast } = useToast();
+    const [currentVersion, setCurrentVersion] = useState<string>('');
+    const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+    const [updateAvailable, setUpdateAvailable] = useState(false);
+    const [updateVersion, setUpdateVersion] = useState('');
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
+    const [updateObject, setUpdateObject] = useState<Awaited<ReturnType<typeof checkUpdate>> | null>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            getVersion().then(setCurrentVersion).catch(() => setCurrentVersion('Unknown'));
+        }
+    }, [isOpen]);
+
+    const handleCheckUpdate = async () => {
+        setIsCheckingUpdate(true);
+        setUpdateAvailable(false);
+        setUpdateVersion('');
+
+        try {
+            const update = await checkUpdate();
+            if (update) {
+                setUpdateAvailable(true);
+                setUpdateVersion(update.version);
+                setUpdateObject(update);
+                addToast(`Update available: v${update.version}`, 'success');
+            } else {
+                addToast('You are using the latest version', 'info');
+            }
+        } catch (error) {
+            console.error('Failed to check for updates:', error);
+            const isDev = window.location.protocol === 'http:';
+            if (isDev) {
+                addToast('Update checker only works in production builds', 'info');
+            } else {
+                addToast('Failed to check for updates', 'error');
+            }
+        } finally {
+            setIsCheckingUpdate(false);
+        }
+    };
+
+    const handleInstallUpdate = async () => {
+        if (!updateObject) return;
+
+        setIsDownloading(true);
+        try {
+            await updateObject.downloadAndInstall((event) => {
+                if (event.event === 'Progress') {
+                    const data = event.data as { chunkLength: number; contentLength?: number };
+                    if (data.contentLength) {
+                        const progress = Math.round((data.chunkLength / data.contentLength) * 100);
+                        setDownloadProgress(progress);
+                    }
+                }
+            });
+            addToast('Update installed! Restarting...', 'success');
+            await relaunch();
+        } catch (error) {
+            console.error('Failed to install update:', error);
+            addToast('Failed to install update', 'error');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    const openExternal = async (url: string) => {
+        try {
+            await open(url);
+        } catch (error) {
+            console.error('Failed to open external link:', error);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
         <div className="modal-overlay active fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
-            <div className="modal-content bg-white dark:bg-gray-800 w-[500px] rounded-xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700 text-center">
-                <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/20">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+            <div className="modal-content bg-white dark:bg-gray-800 w-[700px] max-h-[85vh] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 relative">
+                    <button
+                        onClick={onClose}
+                        className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold dark:text-white">AnnotaLoop</h2>
+                            <p className="text-primary font-medium text-sm">Version {currentVersion || '...'}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                AI-assisted document annotation with human-in-the-loop workflows
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <h2 className="text-2xl font-bold mb-2 dark:text-white">AnnotaLoop</h2>
-                <p className="text-primary font-medium mb-6">v2.4.0 (Stable)</p>
-                <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                    AI-assisted document annotation with human-in-the-loop workflows.
-                </p>
-                <div className="flex justify-center gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-8">
-                    <span>• Provider-Agnostic</span>
-                    <span>• Open Source</span>
-                    <span>• HITL Ready</span>
+
+                {/* Content - 2 Column Layout */}
+                <div className="p-6 overflow-y-auto flex-1">
+                    <div className="grid grid-cols-2 gap-6">
+                        {/* Left Column - Links & Contact */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Links & Contact</h3>
+
+                            <button
+                                onClick={() => openExternal('https://tayyab.io/projects/annotaloop')}
+                                className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-900 transition-all group flex items-center gap-3"
+                            >
+                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    <Globe className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-primary block">Project Website</span>
+                                    <span className="text-xs text-gray-500">tayyab.io/projects/annotaloop</span>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-primary" />
+                            </button>
+
+                            <button
+                                onClick={() => openExternal('https://github.com/tayyab-nlp/AnnotaLoop')}
+                                className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-900 transition-all group flex items-center gap-3"
+                            >
+                                <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-primary block">GitHub Repository</span>
+                                    <span className="text-xs text-gray-500">View source & contribute</span>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-primary" />
+                            </button>
+
+                            <button
+                                onClick={() => openExternal('mailto:hello@tayyab.io')}
+                                className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-900 transition-all group flex items-center gap-3"
+                            >
+                                <div className="w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                                    <Mail className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-primary block">Contact</span>
+                                    <span className="text-xs text-gray-500">hello@tayyab.io</span>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-primary" />
+                            </button>
+                        </div>
+
+                        {/* Right Column - Updates */}
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Software Updates</h3>
+                            <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                {updateAvailable ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white">Update Available</p>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Version {updateVersion} is ready</p>
+                                            </div>
+                                        </div>
+                                        {isDownloading && downloadProgress > 0 && (
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                                                    <span>Downloading...</span>
+                                                    <span>{downloadProgress}%</span>
+                                                </div>
+                                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                                    <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
+                                                </div>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={handleInstallUpdate}
+                                            disabled={isDownloading}
+                                            className="w-full px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-gray-400 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            {isDownloading ? 'Installing...' : 'Install Update'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white">Up to Date</p>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">You're running the latest version</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleCheckUpdate}
+                                            disabled={isCheckingUpdate}
+                                            className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 text-gray-700 dark:text-gray-300 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <RefreshCw className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                                            {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button onClick={onClose} className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 px-6 py-2 rounded-full text-sm font-medium transition-colors">Close</button>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Made with ❤️ by <button onClick={() => openExternal('https://tayyab.io')} className="text-primary hover:underline">Tayyab</button>
+                    </p>
+                </div>
             </div>
         </div>
     );

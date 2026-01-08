@@ -349,6 +349,7 @@ const AppContent = () => {
           onPromptDelete={handlePromptDelete}
           onOpenImportModal={exportImport.handleOpenProjectImport}
           onViewSampleProject={handleViewSampleProject}
+          onOpenSettingsModal={() => setSettingsModalOpen(true)}
         />
       )}
 

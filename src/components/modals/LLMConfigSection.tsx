@@ -33,7 +33,7 @@ const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({ provider, settings,
 
         // Only keep input value for local if auto-filled, otherwise clear
         if (provider === 'ollama') setInputValue('http://localhost:11434');
-        else if (provider === 'lmstudio') setInputValue('http://localhost:1234');
+        else if (provider === 'lmstudio') setInputValue('http://localhost:1234/v1');
         else setInputValue('');
 
     }, [provider]);
@@ -146,7 +146,7 @@ const LLMConfigSection: React.FC<LLMConfigSectionProps> = ({ provider, settings,
                                 <p className="font-bold mb-1">Local LLM Guide</p>
                                 <p className="mb-1">1. Ensure your server is running.</p>
                                 <p className="mb-1">2. Allow CORS connections.</p>
-                                <p>3. Default: {provider === 'ollama' ? 'http://localhost:11434' : 'http://localhost:1234'}</p>
+                                <p>3. Default: {provider === 'ollama' ? 'http://localhost:11434' : 'http://localhost:1234/v1'}</p>
                             </div>
                         </div>
                     )}

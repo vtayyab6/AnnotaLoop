@@ -23,6 +23,7 @@
     "dialog:default",
     "dialog:allow-save",
     "dialog:allow-open",
+    "shell:allow-open",
     {
       "identifier": "http:allow-fetch",
       "allow": [

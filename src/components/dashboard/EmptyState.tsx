@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Upload, PlayCircle, LayoutTemplate } from 'lucide-react';
+import { open } from '@tauri-apps/plugin-shell';
 import workflowIllustration from '../../assets/workflow-illustration.png';
 import workflowIllustrationDark from '../../assets/workflow-illustration-dark.png';
 
@@ -10,6 +11,14 @@ interface EmptyStateProps {
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({ onCreateProject, onImportProject, onViewSampleProject }) => {
+    const handleWatchDemo = async () => {
+        try {
+            await open('https://tayyab.io/annotaloop/#video-complete-workflow');
+        } catch (error) {
+            console.error('Failed to open demo video link:', error);
+        }
+    };
+
     return (
         <div className="h-full flex flex-col items-center justify-center animate-fade-in pb-10">
             <div className="w-full max-w-4xl text-center space-y-6">
@@ -74,7 +83,10 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onCreateProject, onImportProjec
                         View sample project
                     </button>
                     <div className="w-px h-4 bg-gray-300 dark:bg-gray-700"></div>
-                    <button className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 transition-colors">
+                    <button
+                        onClick={handleWatchDemo}
+                        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                    >
                         <PlayCircle className="w-4 h-4" />
                         Watch video demo
                     </button>

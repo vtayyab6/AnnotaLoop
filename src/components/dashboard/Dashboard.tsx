@@ -11,6 +11,7 @@ interface DashboardProps {
     onPromptDelete: (type: 'project', id: number) => void;
     onOpenImportModal?: () => void;
     onViewSampleProject?: () => void;
+    onOpenSettingsModal?: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = (props) => {

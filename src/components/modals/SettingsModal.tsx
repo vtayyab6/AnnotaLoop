@@ -208,8 +208,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     <ul className="space-y-1">
                         <li onClick={() => setActiveTab('llm')} className={`px-3 py-2 rounded font-medium text-sm cursor-pointer transition-all ${activeTab === 'llm' ? 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 text-primary' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>LLM Integration</li>
                         <li onClick={() => setActiveTab('security')} className={`px-3 py-2 rounded font-medium text-sm cursor-pointer transition-all ${activeTab === 'security' ? 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 text-primary' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>Security & Lock</li>
-                        <li onClick={() => setActiveTab('general')} className={`px-3 py-2 rounded font-medium text-sm cursor-pointer transition-all ${activeTab === 'general' ? 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 text-primary' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>General</li>
-                        <li onClick={() => setActiveTab('about')} className={`px-3 py-2 rounded font-medium text-sm cursor-pointer transition-all ${activeTab === 'about' ? 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 text-primary' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>About & Updates</li>
                     </ul>
                 </div>
 
@@ -234,15 +232,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     // Helper to check connection
                                     const isConnected = (p: string) => settings.providers[p]?.models?.length > 0;
 
-                                    // Definitions
+                                    // Definitions (excluding local LLMs since they're disabled)
                                     const providers = [
-                                        { id: 'mistral', label: 'Mistral AI' },
-                                        { id: 'openai', label: 'OpenAI' },
-                                        { id: 'anthropic', label: 'Anthropic' },
-                                        { id: 'gemini', label: 'Gemini' },
-                                        { id: 'openrouter', label: 'OpenRouter' },
-                                        { id: 'ollama', label: 'Ollama', isLocal: true },
-                                        { id: 'lmstudio', label: 'LM Studio', isLocal: true },
+                                        { id: 'mistral', label: 'Mistral AI', isLocal: false },
+                                        { id: 'openai', label: 'OpenAI', isLocal: false },
+                                        { id: 'anthropic', label: 'Anthropic', isLocal: false },
+                                        { id: 'gemini', label: 'Gemini', isLocal: false },
+                                        { id: 'openrouter', label: 'OpenRouter', isLocal: false },
+                                        // Local LLMs disabled - Coming Soon
+                                        // { id: 'ollama', label: 'Ollama', isLocal: true },
+                                        // { id: 'lmstudio', label: 'LM Studio', isLocal: true },
                                     ];
 
                                     providers.forEach(p => {
@@ -313,45 +312,51 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                             {provider === 'openrouter' ? 'OpenRouter' : provider.charAt(0).toUpperCase() + provider.slice(1)}
                                         </button>
                                     ))
-                                ) : (
-                                    // Local Tabs
-                                    (['ollama', 'lmstudio'] as const).map(provider => (
-                                        <button
-                                            key={provider}
-                                            onClick={() => setActiveSubTab(provider)}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeSubTab === provider
-                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                                : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                                }`}
-                                        >
-                                            {provider === 'lmstudio' ? 'LM Studio' : 'Ollama'}
-                                        </button>
-                                    ))
-                                )}
+                                ) : null}
                             </div>
 
                             {/* Configuration Area */}
                             <div className="relative z-10">
-                                <LLMConfigSection
-                                    provider={activeSubTab}
-                                    settings={settings}
-                                    setSettings={setSettings}
-                                />
+                                {!['ollama', 'lmstudio'].includes(activeSubTab) ? (
+                                    <LLMConfigSection
+                                        provider={activeSubTab}
+                                        settings={settings}
+                                        setSettings={setSettings}
+                                    />
+                                ) : (
+                                    // Coming Soon Message for Local LLMs
+                                    <div className="flex flex-col items-center justify-center py-12 px-6">
+                                        <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full flex items-center justify-center mb-4">
+                                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                            Coming Soon
+                                        </h3>
+                                        <p className="text-center text-sm text-gray-500 dark:text-gray-400 max-w-md mb-1">
+                                            Local LLM support for Ollama and LM Studio is currently under development.
+                                        </p>
+                                        <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+                                            For now, please use one of our supported cloud providers.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'security' && (
                         <div>
-                            <h2 className="text-xl font-bold mb-6">Security & App Lock</h2>
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6 flex items-start gap-3">
-                                <Lock className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
-                                <p className="text-sm text-yellow-700 dark:text-yellow-400">Enabling App Lock will require a 4-digit PIN every time you open or return to AnnotaLoop.</p>
+                            <h2 className="text-xl font-bold mb-4">Security & App Lock</h2>
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4 flex items-start gap-2">
+                                <Lock className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
+                                <p className="text-xs text-yellow-700 dark:text-yellow-400">Enabling App Lock will require a 4-digit PIN every time you open or return to AnnotaLoop.</p>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg mb-6">
+                            <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
                                 <div>
-                                    <div className="font-medium">Enable App Lock</div>
+                                    <div className="text-sm font-medium">Enable App Lock</div>
                                     <div className="text-xs text-gray-500">Secure application with PIN</div>
                                 </div>
                                 <button onClick={toggleAppLock} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${security.enabled ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}>
@@ -360,26 +365,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             </div>
 
                             {security.enabled && (
-                                <div className="space-y-6 animate-fade-in">
+                                <div className="space-y-4 animate-fade-in">
                                     {/* PIN Setup/Change */}
-                                    <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-3">
+                                    <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
                                             {isFirstTimeSetup ? 'Set Up PIN' : 'Change PIN'}
                                         </label>
 
                                         {pinError && (
-                                            <div className="mb-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded">
+                                            <div className="mb-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1.5 rounded">
                                                 {pinError}
                                             </div>
                                         )}
 
-                                        <div className="space-y-3">
+                                        <div className="space-y-2">
                                             {!isFirstTimeSetup && (
                                                 <input
                                                     type="password"
                                                     value={currentPin}
                                                     onChange={(e) => setCurrentPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                                                    className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm tracking-widest text-center font-bold"
+                                                    className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm tracking-widest text-center font-bold"
                                                     placeholder="Current PIN"
                                                 />
                                             )}
@@ -387,19 +392,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                                 type="password"
                                                 value={newPin}
                                                 onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                                                className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm tracking-widest text-center font-bold"
+                                                className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm tracking-widest text-center font-bold"
                                                 placeholder="New 4-digit PIN"
                                             />
                                             <input
                                                 type="password"
                                                 value={confirmPin}
                                                 onChange={(e) => setConfirmPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                                                className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm tracking-widest text-center font-bold"
+                                                className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm tracking-widest text-center font-bold"
                                                 placeholder="Confirm PIN"
                                             />
                                             <button
                                                 onClick={isFirstTimeSetup ? handleSetupPin : handleChangePin}
-                                                className="w-full px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded text-xs font-bold hover:opacity-90"
+                                                className="w-full px-4 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-black rounded text-xs font-bold hover:opacity-90"
                                             >
                                                 {isFirstTimeSetup ? 'Set PIN' : 'Update PIN'}
                                             </button>
@@ -408,8 +413,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                                     {/* Recovery Key - only show after PIN is set */}
                                     {!isFirstTimeSetup && (
-                                        <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                                            <div className="flex justify-between items-center mb-3">
+                                        <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                            <div className="flex justify-between items-center mb-2">
                                                 <label className="block text-xs font-bold text-gray-500 uppercase">Recovery Key</label>
                                                 <button
                                                     onClick={handleRegenerateKey}
@@ -423,24 +428,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                                     type="text"
                                                     readOnly
                                                     value={security.secret}
-                                                    className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm font-mono text-gray-600 dark:text-gray-300 pr-10"
+                                                    className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-xs font-mono text-gray-600 dark:text-gray-300 pr-8"
                                                 />
                                                 <button
                                                     onClick={handleCopyKey}
-                                                    className="absolute right-2 top-1.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                    className="absolute right-1.5 top-1 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                                                     title="Copy to clipboard"
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                                 </button>
                                             </div>
-                                            <p className="text-xs text-gray-400 mt-2">
+                                            <p className="text-xs text-gray-400 mt-1.5">
                                                 Save this key in a safe place. You can use it to reset your PIN if you forget it.
                                             </p>
                                             <button
                                                 onClick={handleDownloadKey}
-                                                className="mt-3 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+                                                className="mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-1.5 rounded text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1.5"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                                 Download Recovery Key
                                             </button>
                                         </div>

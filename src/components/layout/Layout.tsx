@@ -26,7 +26,7 @@ const Layout: React.FC<LayoutProps> = ({
     onOpenImportModal,
     hideHeader = false,
     hideSidebar = false,
-    forceSidebarCollapsed = false,
+    forceSidebarCollapsed = true,
 }) => {
     React.useEffect(() => {
         const handleOpenSettings = () => onOpenSettingsModal();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
     LayoutDashboard,
@@ -9,7 +9,8 @@ import {
     Lock,
     CircleHelp,
     Info,
-    ChevronLeft
+    ChevronLeft,
+    Cpu
 } from 'lucide-react';
 import LockSetupModal from '../modals/LockSetupModal';
 
@@ -35,7 +36,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         toggleTheme,
         isDark,
         lockApp,
-        security
+        security,
+        settings
     } = useApp();
 
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
@@ -43,6 +45,28 @@ const Sidebar: React.FC<SidebarProps> = ({
     const toggleSidebar = () => setCollapsed(prev => !prev);
 
     const [showLockSetupModal, setShowLockSetupModal] = useState(false);
+
+    // LLM Connection Status
+    const llmStatus = useMemo(() => {
+        if (!settings.providers) return { connected: false, provider: null };
+
+        for (const [key, config] of Object.entries(settings.providers)) {
+            const providerConfig = config as { models?: string[] };
+            if (providerConfig?.models && providerConfig.models.length > 0) {
+                const providerNames: Record<string, string> = {
+                    mistral: 'Mistral',
+                    openai: 'OpenAI',
+                    anthropic: 'Claude',
+                    gemini: 'Gemini',
+                    openrouter: 'OpenRouter',
+                    ollama: 'Ollama',
+                    lmstudio: 'LM Studio'
+                };
+                return { connected: true, provider: providerNames[key] || key };
+            }
+        }
+        return { connected: false, provider: null };
+    }, [settings.providers]);
 
     const handleLockApp = () => {
         if (security.enabled) {
@@ -199,6 +223,32 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Bottom Actions */}
                 <div className="p-2 border-t border-gray-200 dark:border-gray-700 space-y-0.5 overflow-x-hidden">
+                    {/* LLM Connection Status */}
+                    <button
+                        onClick={onOpenSettingsModal}
+                        className={[
+                            'sidebar-item w-full flex items-center px-2 py-2 rounded mb-1',
+                            llmStatus.connected
+                                ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
+                                : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20',
+                            'cursor-pointer transition-colors overflow-hidden whitespace-nowrap group relative',
+                            collapsed ? 'justify-center' : ''
+                        ].join(' ')}
+                        title="Configure LLM"
+                    >
+                        <span className="w-5 h-5 min-w-[1.25rem] flex items-center justify-center">
+                            <Cpu className="w-[18px] h-[18px]" />
+                        </span>
+                        <span className={collapsed ? 'hidden' : 'nav-text ml-2 text-xs font-medium truncate'}>
+                            {llmStatus.connected ? `${llmStatus.provider} Connected` : 'No LLM Connected'}
+                        </span>
+                        {collapsed && (
+                            <span className="sidebar-tooltip">
+                                {llmStatus.connected ? `${llmStatus.provider} Connected` : 'No LLM Connected'}
+                            </span>
+                        )}
+                    </button>
+
                     <button
                         onClick={onOpenSettingsModal}
                         className={[
@@ -282,8 +332,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <span className="w-5 h-5 min-w-[1.25rem] flex items-center justify-center">
                             <Info className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" />
                         </span>
-                        <span className={collapsed ? 'hidden' : 'nav-text ml-2'}>About App</span>
-                        {collapsed && <span className="sidebar-tooltip">About App</span>}
+                        <span className={collapsed ? 'hidden' : 'nav-text ml-2'}>About & Updates</span>
+                        {collapsed && <span className="sidebar-tooltip">About & Updates</span>}
                     </button>
                 </div>
             </aside>

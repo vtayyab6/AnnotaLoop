@@ -80,6 +80,7 @@ const AnnotationPage = () => {
         const defaultProvider = settings.defaultProvider?.toLowerCase();
         let providerKey = defaultProvider;
         if (defaultProvider === 'mistral ai') providerKey = 'mistral';
+        if (defaultProvider === 'lm studio') providerKey = 'lmstudio';
 
         const providerConfig = settings.providers[providerKey];
         return {

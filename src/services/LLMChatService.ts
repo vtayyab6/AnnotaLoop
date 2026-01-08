@@ -181,8 +181,9 @@ export class LLMChatService {
                     buildBody: (messages, model) => ({
                         model,
                         messages,
-                        temperature: 0.1,
-                        response_format: { type: 'json_object' }
+                        temperature: 0.1
+                        // Note: response_format removed - LM Studio doesn't support 'json_object' type
+                        // JSON output is enforced through prompt instructions instead
                     }),
                     parseResponse: (data) => ({
                         content: data.choices?.[0]?.message?.content || '',
